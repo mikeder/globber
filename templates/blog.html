@@ -1,27 +1,29 @@
 <!doctype html>
 <html>
 
-<head>
-    <meta charset="utf-8">
-    <title>{{.PageTitle}}</title>
-    <link rel="stylesheet" href="/static/css/style.css">
-    <link rel="stylesheet" href="/static/css/slate.css">
-    <script src="https://cdn.jsdelivr.net/gh/google/code-prettify@master/loader/run_prettify.js"></script>
-</head>
+{{ template "head.html" }}
 
-<div class="content">
+<body>
+    {{ template "nav.html" }}
+    
+    <div class="content">
 
-    <ul>
-        {{range .Posts}}
-        <a href="/blog/post/{{ .ID }}"><h2>{{.Title}}</h2></a>
-        <p class="post-header">Published: {{.Published}} - Updated: {{.Updated}}</p>
-        <article>
-            {{html .HTML}}
-        </article>
-        <hr>
-        {{end}}
-    </ul>
+        <ul>
+            {{range .Posts}}
+            <a href="/blog/post/{{ .ID }}">
+                <h2>{{.Title}}</h2>
+            </a>
+            <p class="post-header">Published: {{.Published}} - Updated: {{.Updated}}</p>
+            <article>
+                {{html .HTML}}
+            </article>
+            <hr>
+            {{end}}
+        </ul>
 
-</div>
+    </div>
+
+    {{ template "footer.html" }}
+</body>
 
 </html>

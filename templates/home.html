@@ -1,20 +1,16 @@
 <!doctype html>
 <html>
 
-<head>
-    <meta charset="utf-8">
-    <title>{{.PageTitle}}</title>
-    <link rel="stylesheet" href="/static/css/style.css">
-    <link rel="stylesheet" href="/static/css/slate.css">
-    <script src="https://cdn.jsdelivr.net/gh/google/code-prettify@master/loader/run_prettify.js"></script>
-</head>
+{{ template "head.html" }}
 
-<div class="content">
+<body>
 
-    <a href="/blog">Blog</a>
-    <a href="/music">Music</a>
-    <a href="/photos">Photos</a>
+    {{ template "nav.html" }}
+    <div class="content">
+        <h2>I'll put something here someday..</h2>
+    </div>
 
-</div>
+    {{ template "footer.html" }}
+</body>
 
 </html>
