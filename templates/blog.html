@@ -1,6 +1,3 @@
-<!doctype html>
-<html>
-
 {{ template "head.html" }}
 
 <body>
@@ -9,21 +6,24 @@
     <div class="content">
 
         <ul>
-            {{range .Posts}}
-            <a href="/blog/post/{{ .ID }}">
-                <h2>{{.Title}}</h2>
-            </a>
-            <p class="post-header">Published: {{.Published}} - Updated: {{.Updated}}</p>
-            <article>
-                {{html .HTML}}
-            </article>
-            <hr>
-            {{end}}
+            {{ if .Posts }}
+                {{range .Posts}}
+                <a href="/blog/post/{{ .ID }}">
+                    <h2>{{.Title}}</h2>
+                </a>
+                <p class="post-header">Published: {{.Published}} - Updated: {{.Updated}}</p>
+                <article>
+                    {{html .HTML}}
+                </article>
+                <hr>
+                {{end}}
+            {{ else }}
+                <h2>Nothing here yet...</h2>
+            {{ end }}
         </ul>
 
     </div>
 
-    {{ template "footer.html" }}
 </body>
 
-</html>
+{{ template "footer.html" }}

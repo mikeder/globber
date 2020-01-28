@@ -14,6 +14,7 @@ import (
 	"github.com/go-chi/chi/middleware"
 	"github.com/mikeder/globber/internal/blog"
 	"github.com/mikeder/globber/internal/web"
+	"github.com/pkg/errors"
 )
 
 // New returns an http.Handler with routes to support
@@ -83,9 +84,7 @@ func (a *api) loadTemplates() {
 func (a *api) blog(w http.ResponseWriter, r *http.Request) {
 	posts, err := a.blogStore.GetPosts()
 	if err != nil {
-		log.Println(err)
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte("Failed to get posts from database."))
+		log.Println(errors.Wrap(err, "getting posts from database"))
 	}
 
 	data := struct {
