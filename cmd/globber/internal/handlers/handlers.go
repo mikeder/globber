@@ -90,17 +90,21 @@ func (a *api) loadTemplates() {
 }
 
 func (a *api) blog(w http.ResponseWriter, r *http.Request) {
+	authed := true
+	pagetitle := a.config.SiteName + " - Blog"
 	posts, err := a.blogStore.GetPosts()
 	if err != nil {
 		log.Println(errors.Wrap(err, "getting posts from database"))
 	}
 
 	data := struct {
-		PageTitle string
-		Posts     []blog.Post
+		Authenticated *bool
+		PageTitle     *string
+		Posts         []blog.Post
 	}{
-		PageTitle: a.config.SiteName + " - Blog",
-		Posts:     posts,
+		Authenticated: &authed,
+		PageTitle:     &pagetitle,
+		Posts:         posts,
 	}
 	a.loadTemplates()
 	web.Render(w, a.templates.Lookup("blog.html"), data)
@@ -122,11 +126,13 @@ func (a *api) blogPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	data := struct {
-		PageTitle string
-		Posts     []blog.Post
+		Authenticated bool
+		PageTitle     string
+		Posts         []blog.Post
 	}{
-		PageTitle: a.config.SiteName + " - Blog",
-		Posts:     []blog.Post{*post},
+		Authenticated: true,
+		PageTitle:     a.config.SiteName + " - Blog",
+		Posts:         []blog.Post{*post},
 	}
 	a.loadTemplates()
 	web.Render(w, a.templates.Lookup("blog.html"), data)
@@ -135,9 +141,11 @@ func (a *api) blogPost(w http.ResponseWriter, r *http.Request) {
 func (a *api) root(w http.ResponseWriter, r *http.Request) {
 	a.loadTemplates()
 	data := struct {
-		PageTitle string
+		Authenticated bool
+		PageTitle     string
 	}{
-		PageTitle: a.config.SiteName + " - Home",
+		Authenticated: false,
+		PageTitle:     a.config.SiteName + " - Home",
 	}
 	web.Render(w, a.templates.Lookup("home.html"), data)
 }

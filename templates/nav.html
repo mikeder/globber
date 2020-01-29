@@ -7,8 +7,8 @@
 
     <div class="collapse navbar-collapse" id="navbarColor01">
         <ul class="navbar-nav mr-auto">
-            <li class="nav-item active">
-                <a class="nav-link" href="/">Home <span class="sr-only">(current)</span></a>
+            <li class="nav-item">
+                <a class="nav-link" href="/">Home</a>
             </li>
             <li class="nav-item">
                 <a class="nav-link" href="/blog">Blog</a>
@@ -20,5 +20,14 @@
                 <a class="nav-link" href="https://music.sqweeb.net">Music</a>
             </li>
         </ul>
+        {{if .Authenticated}}
+            <form class="form-inline my-2 my-lg-0">
+                <button class="btn btn-danger my-2 my-sm-0" type="submit">Logout</button>
+            </form>
+        {{else}}
+            <form class="form-inline my-2 my-lg-0">
+                <button class="btn btn-success my-2 my-sm-0" type="submit">Login</button>
+            </form>
+        {{end}}
     </div>
 </nav>
