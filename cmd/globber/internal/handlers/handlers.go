@@ -41,6 +41,7 @@ func New(bs *blog.Store, cfg *Config) http.Handler {
 	router.Use(middleware.Timeout(60 * time.Second))
 
 	// add routes
+	router.Get("/*", api.root)
 	router.Get("/", api.root)
 	router.Get("/blog", api.blog)
 	router.Get("/blog/post/{postID}", api.blogPost)
