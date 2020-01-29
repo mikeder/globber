@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	"strconv"
 	"strings"
 	"time"
 
@@ -44,7 +43,7 @@ func New(bs *blog.Store, cfg *Config) http.Handler {
 	router.Get("/*", api.root)
 	router.Get("/", api.root)
 	router.Get("/blog", api.blog)
-	router.Get("/blog/post/{postID}", api.blogPost)
+	router.Get("/blog/entry/{slug}", api.blogPost)
 
 	router.Get("/favicon.ico", faviconHandler)
 
@@ -108,12 +107,8 @@ func (a *api) blog(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *api) blogPost(w http.ResponseWriter, r *http.Request) {
-	idin := chi.URLParam(r, "postID")
-	if idin == "" {
-		w.Write([]byte("postID not found"))
-	}
-	id, err := strconv.Atoi(idin)
-	post, err := a.blogStore.GetPost(id)
+	slug := chi.URLParam(r, "slug")
+	post, err := a.blogStore.GetPostBySlug(slug)
 	if err != nil {
 		switch err {
 		case sql.ErrNoRows:

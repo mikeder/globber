@@ -8,7 +8,7 @@
         <ul>
             {{ if .Posts }}
                 {{range .Posts}}
-                <a href="/blog/post/{{ .ID }}">
+                <a href="/blog/entry/{{ .Slug }}">
                     <h2>{{.Title}}</h2>
                 </a>
                 <p class="post-header">Published: {{.Published}} - Updated: {{.Updated}}</p>

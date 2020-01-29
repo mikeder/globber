@@ -4818,6 +4818,9 @@ input[type="submit"].btn-block, input[type="reset"].btn-block, input[type="butto
     background-clip: border-box;
     border: 1px solid rgba(0, 0, 0, 0.6);
     border-radius: 0.25rem;
+    margin: 1px;
+    padding: 10px 3px;
+    width: calc( 100% / 5 - 10px);
 }
 
 .card>hr {

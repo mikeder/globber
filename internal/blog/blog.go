@@ -22,8 +22,8 @@ type Post struct {
 	Updated   string `json:"updated"`
 }
 
-func (s *Store) GetPost(id int) (*Post, error) {
-	result, err := s.db.Query("SELECT * FROM entries WHERE id=?", id)
+func (s *Store) GetPostBySlug(slug string) (*Post, error) {
+	result, err := s.db.Query("SELECT * FROM entries WHERE slug=?", slug)
 	if err != nil {
 		return nil, err
 	}
