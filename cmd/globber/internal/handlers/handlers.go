@@ -17,11 +17,17 @@ import (
 	"github.com/pkg/errors"
 )
 
+// Config contains contextual information for use within handlers.
+type Config struct {
+	SiteName string
+}
+
 // New returns an http.Handler with routes to support
 // the API for this application.
-func New(bs *blog.Store) http.Handler {
+func New(bs *blog.Store, cfg *Config) http.Handler {
 	api := api{
 		blogStore: bs,
+		config:    cfg,
 	}
 	api.loadTemplates()
 
@@ -39,19 +45,22 @@ func New(bs *blog.Store) http.Handler {
 	router.Get("/blog", api.blog)
 	router.Get("/blog/post/{postID}", api.blogPost)
 
+	router.Get("/favicon.ico", faviconHandler)
+
 	fs := http.FileServer(http.Dir("./static/"))
 	router.Get("/static/*", http.HandlerFunc(http.StripPrefix("/static/", fs).ServeHTTP))
 
 	return router
 }
 
-func noescape(str string) template.HTML {
-	return template.HTML(str)
-}
-
 type api struct {
 	blogStore *blog.Store
+	config    *Config
 	templates *template.Template
+}
+
+func faviconHandler(w http.ResponseWriter, r *http.Request) {
+	http.ServeFile(w, r, "./static/favicon.ico")
 }
 
 func (a *api) loadTemplates() {
@@ -78,7 +87,6 @@ func (a *api) loadTemplates() {
 		},
 	})
 	a.templates = templates
-	log.Printf("loaded templates: %+v", templates.Name())
 }
 
 func (a *api) blog(w http.ResponseWriter, r *http.Request) {
@@ -91,9 +99,10 @@ func (a *api) blog(w http.ResponseWriter, r *http.Request) {
 		PageTitle string
 		Posts     []blog.Post
 	}{
-		PageTitle: "blog",
+		PageTitle: a.config.SiteName + " - Blog",
 		Posts:     posts,
 	}
+	a.loadTemplates()
 	web.Render(w, a.templates.Lookup("blog.html"), data)
 }
 
@@ -120,12 +129,19 @@ func (a *api) blogPost(w http.ResponseWriter, r *http.Request) {
 		PageTitle string
 		Posts     []blog.Post
 	}{
-		PageTitle: "blog",
+		PageTitle: a.config.SiteName + " - Blog",
 		Posts:     []blog.Post{*post},
 	}
+	a.loadTemplates()
 	web.Render(w, a.templates.Lookup("blog.html"), data)
 }
 
 func (a *api) root(w http.ResponseWriter, r *http.Request) {
-	web.Render(w, a.templates.Lookup("home.html"), nil)
+	a.loadTemplates()
+	data := struct {
+		PageTitle string
+	}{
+		PageTitle: a.config.SiteName + " - Home",
+	}
+	web.Render(w, a.templates.Lookup("home.html"), data)
 }

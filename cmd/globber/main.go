@@ -25,8 +25,13 @@ func run() error {
 	dbpass := flag.String("dbpass", "", "database password")
 	dbhost := flag.String("dbhost", "", "database hostname")
 	dbname := flag.String("dbname", "", "database name")
+	sitename := flag.String("sitename", "", "website name used in titles")
 
 	flag.Parse()
+
+	if *sitename == "" {
+		*sitename = "Test Site"
+	}
 
 	dbCFG := mysql.NewConfig()
 
@@ -42,7 +47,7 @@ func run() error {
 
 	server := &http.Server{
 		Addr:         ":3000",
-		Handler:      handlers.New(blogStore),
+		Handler:      handlers.New(blogStore, &handlers.Config{SiteName: *sitename}),
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 10 * time.Second,
 	}
