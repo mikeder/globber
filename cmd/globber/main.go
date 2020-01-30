@@ -11,6 +11,8 @@ import (
 	"github.com/mikeder/globber/cmd/globber/internal/handlers"
 	"github.com/mikeder/globber/internal/blog"
 	"github.com/mikeder/globber/internal/database"
+
+	_ "net/http/pprof"
 )
 
 func main() {
@@ -20,6 +22,10 @@ func main() {
 }
 
 func run() error {
+	go func() {
+		http.ListenAndServe(":3030", nil)
+	}()
+
 	// Set a database connection string, this needs improvement.
 	dbuser := flag.String("dbuser", "", "database username")
 	dbpass := flag.String("dbpass", "", "database password")
@@ -42,6 +48,8 @@ func run() error {
 	dbCFG.DBName = *dbname
 
 	db := database.New(dbCFG)
+	db.SetMaxOpenConns(10)
+	db.SetMaxIdleConns(2)
 
 	blogStore := blog.New(db)
 

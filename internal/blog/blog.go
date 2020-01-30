@@ -1,11 +1,16 @@
 package blog
 
-import "database/sql"
+import (
+	"context"
+	"database/sql"
+)
 
+// Store is where we kep blog posts and related information.
 type Store struct {
 	db *sql.DB
 }
 
+// New returns a pointer to a blog Store.
 func New(db *sql.DB) *Store {
 	return &Store{db: db}
 }
@@ -22,8 +27,9 @@ type Post struct {
 	Updated   string `json:"updated"`
 }
 
-func (s *Store) GetPostBySlug(slug string) (*Post, error) {
-	result, err := s.db.Query("SELECT * FROM entries WHERE slug=?", slug)
+// GetPostBySlug returns a *Post by its slug.
+func (s *Store) GetPostBySlug(ctx context.Context, slug string) (*Post, error) {
+	result, err := s.db.QueryContext(ctx, "SELECT * FROM entries WHERE slug=?", slug)
 	if err != nil {
 		return nil, err
 	}
@@ -46,8 +52,9 @@ func (s *Store) GetPostBySlug(slug string) (*Post, error) {
 	return &post, nil
 }
 
-func (s *Store) GetPosts() ([]Post, error) {
-	results, err := s.db.Query("SELECT * FROM entries ORDER BY published DESC")
+// GetPosts returns a []Post of all the posts from the database.
+func (s *Store) GetPosts(ctx context.Context) ([]Post, error) {
+	results, err := s.db.QueryContext(ctx, "SELECT * FROM entries ORDER BY published DESC")
 	if err != nil {
 		return nil, err
 	}
