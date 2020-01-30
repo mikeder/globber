@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -92,7 +93,17 @@ func (a *api) loadTemplates() {
 func (a *api) blog(w http.ResponseWriter, r *http.Request) {
 	authed := true
 	pagetitle := a.config.SiteName + " - Blog"
-	posts, err := a.blogStore.GetPosts(r.Context())
+	page, ok := r.URL.Query()["page"]
+	if !ok {
+		page = []string{"0"}
+	}
+
+	pageNum, err := strconv.Atoi(page[0])
+	if err != nil {
+		log.Println(err)
+	}
+
+	posts, err := a.blogStore.GetPosts(r.Context(), pageNum)
 	if err != nil {
 		log.Println(errors.Wrap(err, "getting posts from database"))
 	}

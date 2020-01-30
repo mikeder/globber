@@ -53,8 +53,12 @@ func (s *Store) GetPostBySlug(ctx context.Context, slug string) (*Post, error) {
 }
 
 // GetPosts returns a []Post of all the posts from the database.
-func (s *Store) GetPosts(ctx context.Context) ([]Post, error) {
-	results, err := s.db.QueryContext(ctx, "SELECT * FROM entries ORDER BY published DESC")
+func (s *Store) GetPosts(ctx context.Context, page int) ([]Post, error) {
+	var offset int
+	if page > 0 {
+		offset = page * 5
+	}
+	results, err := s.db.QueryContext(ctx, "SELECT * FROM entries ORDER BY published DESC LIMIT ?, 5", offset)
 	if err != nil {
 		return nil, err
 	}

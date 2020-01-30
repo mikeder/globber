@@ -4,25 +4,35 @@
 {{ template "part_nav.html" }}
 
 <body>
-    
+
     <div class="container" style="padding-top: 1rem;">
 
         <ul>
             {{ if .Posts }}
-                {{range .Posts}}
-                <a href="/blog/entry/{{ .Slug }}">
-                    <h2>{{.Title}}</h2>
-                </a>
-                <p class="post-header">Published: {{.Published}} - Updated: {{.Updated}}</p>
-                <article>
-                    {{html .HTML}}
-                </article>
-                <hr>
-                {{end}}
+            {{range .Posts}}
+            <a href="/blog/entry/{{ .Slug }}">
+                <h2>{{.Title}}</h2>
+            </a>
+            <p class="post-header">Published: {{.Published}} - Updated: {{.Updated}}</p>
+            <article>
+                {{html .HTML}}
+            </article>
+            <hr>
+            {{end}}
             {{ else }}
-                <h2>Nothing here yet...</h2>
+            <h2>Nothing here yet...</h2>
             {{ end }}
         </ul>
+        <nav aria-label="blog page nav">
+            <ul class="pagination">
+                <li class="page-item"><a class="page-link" href="/blog">0</a></li>
+                <li class="page-item"><a class="page-link" href="/blog?page=1">1</a></li>
+                <li class="page-item"><a class="page-link" href="/blog?page=2">2</a></li>
+                <li class="page-item"><a class="page-link" href="/blog?page=3">3</a></li>
+                <li class="page-item"><a class="page-link" href="/blog?page=4">4</a></li>
+                <li class="page-item"><a class="page-link" href="/blog?page=5">5</a></li>
+            </ul>
+        </nav>
 
     </div>
 
