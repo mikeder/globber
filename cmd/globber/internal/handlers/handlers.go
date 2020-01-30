@@ -92,7 +92,7 @@ func (a *api) loadTemplates() {
 func (a *api) blog(w http.ResponseWriter, r *http.Request) {
 	authed := true
 	pagetitle := a.config.SiteName + " - Blog"
-	posts, err := a.blogStore.GetPosts()
+	posts, err := a.blogStore.GetPosts(r.Context())
 	if err != nil {
 		log.Println(errors.Wrap(err, "getting posts from database"))
 	}
@@ -112,7 +112,7 @@ func (a *api) blog(w http.ResponseWriter, r *http.Request) {
 
 func (a *api) blogPost(w http.ResponseWriter, r *http.Request) {
 	slug := chi.URLParam(r, "slug")
-	post, err := a.blogStore.GetPostBySlug(slug)
+	post, err := a.blogStore.GetPostBySlug(r.Context(), slug)
 	if err != nil {
 		switch err {
 		case sql.ErrNoRows:

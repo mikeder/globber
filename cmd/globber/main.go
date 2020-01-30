@@ -53,9 +53,12 @@ func run() error {
 
 	blogStore := blog.New(db)
 
+	handlerCFG := handlers.Config{SiteName: *sitename}
+	handler := handlers.New(blogStore, &handlerCFG)
+
 	server := &http.Server{
 		Addr:         ":3000",
-		Handler:      handlers.New(blogStore, &handlers.Config{SiteName: *sitename}),
+		Handler:      handler,
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 10 * time.Second,
 	}

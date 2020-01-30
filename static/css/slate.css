@@ -5040,6 +5040,12 @@ input[type="submit"].btn-block, input[type="reset"].btn-block, input[type="butto
     margin-bottom: -1px;
 }
 
+.blog-footer {
+    padding: 2.5rem 0;
+    text-align: center;
+    border-top: .05rem solid #e5e5e5;
+}
+
 .breadcrumb {
     display: -webkit-box;
     display: -ms-flexbox;

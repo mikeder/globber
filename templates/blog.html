@@ -1,9 +1,11 @@
-{{ template "head.html" }}
+<!doctype html>
+<html lang="en">
+{{ template "part_head.html" }}
+{{ template "part_nav.html" }}
 
 <body>
-    {{ template "nav.html" }}
     
-    <div class="container" style="padding-top: 3rem;">
+    <div class="container" style="padding-top: 1rem;">
 
         <ul>
             {{ if .Posts }}
@@ -24,6 +26,7 @@
 
     </div>
 
+    {{ template "part_footer.html" }}
 </body>
 
-{{ template "footer.html" }}
+</html>

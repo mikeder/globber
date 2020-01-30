@@ -1,10 +1,12 @@
-{{ template "head.html" }}
+<!doctype html>
+<html lang="en">
+{{ template "part_head.html" }}
+{{ template "part_nav.html" }}
 
 <body>
 
-    {{ template "nav.html" }}
-    <div class="container" style="padding-top: 3rem;">
-        <div class="card" style="width: 18rem;float: left;">
+    <div class="container" style="padding-top: 1rem;">
+        <div class="card" style="width: 18rem;">
             <img class="card-img-top" src="/static/images/chicken-farm.png" alt="Minecraft Yo!">
             <div class="card-body">
                 <h5 class="card-title">Minecraft Server Highlight</h5>
@@ -13,7 +15,7 @@
                     class="btn btn-primary">See On Map</a>
             </div>
         </div>
-        <div class="card" style="width: 18rem;float: left;">
+        <div class="card" style="width: 18rem;">
             <img class="card-img-top" src="/static/images/tree-tower.png" alt="Minecraft Yo!">
             <div class="card-body">
                 <h5 class="card-title">Minecraft Server Highlight</h5>
@@ -24,7 +26,7 @@
                     class="btn btn-primary">See On Map</a>
             </div>
         </div>
-        <div class="card" style="width: 18rem;float: left;">
+        <div class="card" style="width: 18rem;">
             <img class="card-img-top" src="/static/images/town-center.png" alt="Minecraft Yo!">
             <div class="card-body">
                 <h5 class="card-title">Minecraft Server Highlight</h5>
@@ -35,5 +37,7 @@
         </div>
     </div>
 
-    {{ template "footer.html" }}
+    {{ template "part_footer.html" }}
 </body>
+
+</html>
