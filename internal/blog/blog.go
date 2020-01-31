@@ -87,7 +87,12 @@ func (s *Store) GetPostBySlug(ctx context.Context, slug string) (*Post, error) {
 
 // GetArchive returns a []Post of archived post data.
 func (s *Store) GetArchive(ctx context.Context) ([]Post, error) {
-	const q string = "SELECT ID, Author, Slug, Title, Published, Updated FROM entries"
+	const q string = `SELECT id, 
+		author_id, slug, title, published, updated 
+		FROM entries 
+		ORDER BY published 
+		DESC`
+
 	rows, err := s.db.QueryContext(ctx, q)
 	if err != nil {
 		return nil, err

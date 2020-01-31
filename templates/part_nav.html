@@ -10,9 +10,16 @@
             <li class="nav-item">
                 <a class="nav-link" href="/">Home</a>
             </li>
-            <li class="nav-item">
-                <a class="nav-link" href="/blog">Blog</a>
-            </li>
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="/blog" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    Blog
+                </a>
+                <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                  <a class="dropdown-item" href="/blog?page=0">New</a>
+                  <div class="dropdown-divider"></div>
+                  <a class="dropdown-item" href="/blog/archive">Archive</a>
+                </div>
+              </li>
             <li class="nav-item">
                 <a class="nav-link" href="/photos">Photos</a>
             </li>

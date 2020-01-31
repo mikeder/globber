@@ -44,6 +44,8 @@ func New(bs *blog.Store, cfg *Config) http.Handler {
 	router.Get("/*", api.root)
 	router.Get("/", api.root)
 	router.Get("/blog", api.blog)
+	// router.Get("/blog/new", api.new)
+	router.Get("/blog/archive", api.archive)
 	router.Get("/blog/entry/{slug}", api.blogPost)
 
 	router.Get("/favicon.ico", faviconHandler)
@@ -119,6 +121,27 @@ func (a *api) blog(w http.ResponseWriter, r *http.Request) {
 	}
 	a.loadTemplates()
 	web.Render(w, a.templates.Lookup("blog.html"), data)
+}
+func (a *api) archive(w http.ResponseWriter, r *http.Request) {
+	authed := true
+	pagetitle := a.config.SiteName + " - Blog"
+
+	posts, err := a.blogStore.GetArchive(r.Context())
+	if err != nil {
+		log.Println(errors.Wrap(err, "getting archive posts from database"))
+	}
+
+	data := struct {
+		Authenticated *bool
+		PageTitle     *string
+		Posts         []blog.Post
+	}{
+		Authenticated: &authed,
+		PageTitle:     &pagetitle,
+		Posts:         posts,
+	}
+	a.loadTemplates()
+	web.Render(w, a.templates.Lookup("archive.html"), data)
 }
 
 func (a *api) blogPost(w http.ResponseWriter, r *http.Request) {
