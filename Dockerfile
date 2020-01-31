@@ -21,4 +21,4 @@ COPY --from=builder /src/static ./static/
 COPY --from=builder /src/templates ./templates/
 
 EXPOSE 3000
- 
+ENTRYPOINT [ "globber" ]

@@ -4,9 +4,11 @@ import (
 	"flag"
 	"log"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/go-sql-driver/mysql"
+	"github.com/kelseyhightower/envconfig"
 
 	"github.com/mikeder/globber/cmd/globber/internal/handlers"
 	"github.com/mikeder/globber/internal/blog"
@@ -17,43 +19,56 @@ import (
 
 func main() {
 	if err := run(); err != nil {
+		log.SetOutput(os.Stderr)
 		log.Fatal(err)
 	}
 }
 
 func run() error {
+	log.SetOutput(os.Stdout)
 	go func() {
 		http.ListenAndServe(":3030", nil)
 	}()
 
-	// Set a database connection string, this needs improvement.
-	dbuser := flag.String("dbuser", "", "database username")
-	dbpass := flag.String("dbpass", "", "database password")
-	dbhost := flag.String("dbhost", "", "database hostname")
-	dbname := flag.String("dbname", "", "database name")
-	sitename := flag.String("sitename", "", "website name used in titles")
+	cfg := struct {
+		DbUser   string `default:"root"`
+		DbPass   string `default:"root"`
+		DbHost   string `default:"db"`
+		DbName   string `default:"blog"`
+		SiteName string `default:"TestBlog"`
+	}{}
+
+	if err := envconfig.Process("myapp", &cfg); err != nil {
+		return err
+	}
+
+	helpFlag := flag.Bool("help", false, "print help info")
 
 	flag.Parse()
 
-	if *sitename == "" {
-		*sitename = "Test Site"
+	if *helpFlag {
+		return envconfig.Usage("", &cfg)
 	}
 
+	// Set a database connection string, this needs improvement.
 	dbCFG := mysql.NewConfig()
 
-	dbCFG.User = *dbuser
-	dbCFG.Passwd = *dbpass
+	dbCFG.Addr = cfg.DbHost
+	dbCFG.DBName = cfg.DbName
 	dbCFG.Net = "tcp"
-	dbCFG.Addr = *dbhost
-	dbCFG.DBName = *dbname
+	dbCFG.Passwd = cfg.DbPass
+	dbCFG.User = cfg.DbUser
 
-	db := database.New(dbCFG)
+	db, err := database.New(dbCFG)
+	if err != nil {
+		return err
+	}
 	db.SetMaxOpenConns(10)
 	db.SetMaxIdleConns(2)
 
 	blogStore := blog.New(db)
 
-	handlerCFG := handlers.Config{SiteName: *sitename}
+	handlerCFG := handlers.Config{SiteName: cfg.SiteName}
 	handler := handlers.New(blogStore, &handlerCFG)
 
 	server := &http.Server{
