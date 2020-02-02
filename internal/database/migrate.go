@@ -1,54 +1,108 @@
 package database
 
-import "database/sql"
+import (
+	"context"
+	"database/sql"
+	"log"
+	"time"
+)
 
-import "context"
-
-import "log"
+// Migration is used to apply schema patches to a database.
+type Migration struct {
+	author  string
+	query   string
+	version float32
+}
 
 // Migrate runs migrations on the provide db connection
-func Migrate(db *sql.DB) error {
-	migrations := []string{}
+func Migrate(ctx context.Context, db *sql.DB) error {
+	patched := false
+	current := currentVersion(ctx, db)
 
-	patch0 := `CREATE TABLE authors (
-		id int(11) NOT NULL AUTO_INCREMENT,
-		email varchar(100) NOT NULL,
-		name varchar(100) NOT NULL,
-		hashed_password varchar(100) NOT NULL,
-		PRIMARY KEY (id),
-		UNIQUE KEY email (email)
-	) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8`
+	log.Printf("Current schema version: %.2f", current)
 
-	migrations = append(migrations, patch0)
+	for _, patch := range Migrations {
+		if patch.version > current {
+			log.Printf("Applying patch version %.2f by %s", patch.version, patch.author)
 
-	patch1 := `CREATE TABLE entries (
-		id int(11) NOT NULL AUTO_INCREMENT,
-		author_id int(11) NOT NULL,
-		slug varchar(100) NOT NULL,
-		title varchar(512) NOT NULL,
-		markdown mediumtext NOT NULL,
-		html mediumtext NOT NULL,
-		published datetime NOT NULL,
-		updated timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,                               
-		PRIMARY KEY (id),
-		UNIQUE KEY slug (slug),
-		KEY published (published)
-	  ) ENGINE=InnoDB AUTO_INCREMENT=43 DEFAULT CHARSET=utf8`
+			tx, err := db.BeginTx(ctx, nil)
+			if err != nil {
+				return err
+			}
+			defer func() {
+				if err := tx.Rollback(); err != nil && err != sql.ErrTxDone {
+					log.Println(err)
+				}
+			}()
 
-	migrations = append(migrations, patch1)
+			_, err = tx.ExecContext(ctx, patch.query)
+			if err != nil {
+				return logAndRollback(err, tx)
+			}
+			if err := tx.Commit(); err != nil {
+				return logAndRollback(err, tx)
+			}
 
-	for i, patch := range migrations {
-		ctx := context.Background() // TODO: do something useful w/ ctx
-		tx, err := db.BeginTx(ctx, nil)
-		if err != nil {
-			return err
+			// finally update version table
+			if err := updateVersion(ctx, db, patch.author, patch.version); err != nil {
+				return err
+			}
+			patched = true
 		}
-		log.Printf("Applying patch %d", i)
-		tx.ExecContext(ctx, patch)
-		if err := tx.Commit(); err != nil {
-			return tx.Rollback()
-		}
+	}
+	if !patched {
+		log.Println("No patches needed, database up-to-date.")
 	}
 
 	return nil
+}
+
+func currentVersion(ctx context.Context, db *sql.DB) float32 {
+	const q = `SELECT version from version ORDER BY id DESC LIMIT 0, 1`
+	var version float32 = -1.0
+
+	row, err := db.QueryContext(ctx, q)
+	if err != nil {
+		log.Println(err)
+		return version
+	}
+
+	for row.Next() {
+		if err := row.Scan(&version); err != nil {
+			log.Println(err)
+			return version
+		}
+	}
+	return version
+}
+
+func updateVersion(ctx context.Context, db *sql.DB, author string, version float32) error {
+	const q = `INSERT INTO version(applied, author, version) VALUES (?, ?, ?);`
+
+	tx, err := db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+
+	defer func() {
+		if err := tx.Rollback(); err != nil && err != sql.ErrTxDone {
+			log.Println(err)
+		}
+	}()
+
+	_, err = tx.ExecContext(ctx, q, time.Now(), author, version)
+	if err != nil {
+		return logAndRollback(err, tx)
+	}
+
+	if err := tx.Commit(); err != nil {
+		return logAndRollback(err, tx)
+	}
+
+	return nil
+}
+
+func logAndRollback(err error, tx *sql.Tx) error {
+	log.Println(err)
+	return tx.Rollback()
 }

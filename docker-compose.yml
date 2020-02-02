@@ -1,33 +1,46 @@
 version: '3.3'
 
 services:
-   db:
-     image: mysql:5.7
-     volumes:
-       - db_data:/var/lib/mysql
-     restart: always
-     environment:
-       MYSQL_ROOT_PASSWORD: root
-       MYSQL_DATABASE: blog
-       MYSQL_USER: bloguser
-       MYSQL_PASS: test
+  db:
+    logging:
+      driver: none
+    image: mysql:5.7
+    volumes:
+      - db_data:/var/lib/mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: blog
+      MYSQL_USER: bloguser
+      MYSQL_PASS: test
 
-   globber:
-      depends_on:
-        - db
-      links: 
-        - db
-      build:
-        context: .
-      ports:
-        - "3000:3000"
-      restart: always
-      environment:
-        DBUSER: bloguser
-        DBPASS: test
-        DBHOST: db:3306
-        DBNAME: blog
-        SITENAME: SqweebNet
+  admin:
+    depends_on:
+      - db
+    links: 
+      - db
+    restart: on-failure
+    build:
+      context: .    
+    command: "/bin/admin -migrate"
+
+  site:
+    depends_on:
+      - db
+    links: 
+      - db
+    build:
+      context: .
+    ports:
+      - "3000:3000"
+    restart: always
+    command: "/bin/globber"
+    environment:
+      DBUSER: bloguser
+      DBPASS: test
+      DBHOST: db:3306
+      DBNAME: blog
+      SITENAME: SqweebNet
 
 volumes:
     db_data: {}
