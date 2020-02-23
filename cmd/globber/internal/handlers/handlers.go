@@ -6,24 +6,12 @@ import (
 	"net/http"
 	"time"
 
-	jwt "github.com/dgrijalva/jwt-go"
-
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/jwtauth"
+	"github.com/mikeder/globber/internal/auth"
 	"github.com/mikeder/globber/internal/blog"
 )
-
-var tokenAuth *jwtauth.JWTAuth
-
-func init() {
-	tokenAuth = jwtauth.New("HS256", []byte("secret"), nil)
-
-	// For debugging/example purposes, we generate and print
-	// a sample jwt token with claims `user_id:123` here:
-	_, tokenString, _ := tokenAuth.Encode(jwt.MapClaims{"user_id": 123})
-	fmt.Printf("DEBUG: a sample jwt is %s\n\n", tokenString)
-}
 
 // Config contains contextual information for use within handlers.
 type Config struct {
@@ -32,7 +20,15 @@ type Config struct {
 
 // New returns an http.Handler with routes to support
 // the API for this application.
-func New(bs *blog.Store, cfg *Config) http.Handler {
+func New(authMan *auth.Manager, bs *blog.Store, cfg *Config) http.Handler {
+	api := api{
+		admin: adminAPI{
+			manager: authMan,
+		},
+		auth: authAPI{
+			manager: authMan,
+		},
+	}
 	site := site{
 		blogStore: bs,
 		config:    cfg,
@@ -51,9 +47,8 @@ func New(bs *blog.Store, cfg *Config) http.Handler {
 	// Public routes
 	router.Group(func(r chi.Router) {
 		// auth handlers
-		// router.Post("/auth/login", api.auth.login)
-		// router.Post("/auth/logout", api.auth.logout)
-	
+		router.Post("/auth/login", api.auth.Login)
+
 		router.Get("/*", site.root)
 		router.Get("/blog", site.blogPage)
 		router.Get("/blog/archive", site.blogArchive)
@@ -68,18 +63,18 @@ func New(bs *blog.Store, cfg *Config) http.Handler {
 	// Protected routes
 	router.Group(func(r chi.Router) {
 		// Seek, verify and validate JWT tokens
-		r.Use(jwtauth.Verifier(tokenAuth))
+		r.Use(jwtauth.Verifier(authMan.TokenAuth))
 
-		// Handle valid / invalid tokens. In this example, we use
-		// the provided authenticator middleware, but you can write your
-		// own very easily, look at the Authenticator method in jwtauth.go
-		// and tweak it, its not scary.
+		// Handle valid / invalid tokens
 		r.Use(jwtauth.Authenticator)
 
 		r.Get("/admin", func(w http.ResponseWriter, r *http.Request) {
 			_, claims, _ := jwtauth.FromContext(r.Context())
-			w.Write([]byte(fmt.Sprintf("protected area. hi %v", claims["user_id"])))
+			w.Write([]byte(fmt.Sprintf("protected area. hi %v", claims["name"])))
 		})
+
+		r.Post("/admin/user/add", api.admin.AddUser)
+
 	})
 
 	return router
@@ -87,11 +82,19 @@ func New(bs *blog.Store, cfg *Config) http.Handler {
 
 // api contains json/rest handlers
 type api struct {
-	auth
+	admin adminAPI
+	auth  authAPI
+}
+
+// adminAPI contains admin level handlers
+type adminAPI struct {
+	manager *auth.Manager
 }
 
 // auth contains authentication/authorization handlers
-type auth struct{}
+type authAPI struct {
+	manager *auth.Manager
+}
 
 // site contains handlers for rendering page templates
 type site struct {

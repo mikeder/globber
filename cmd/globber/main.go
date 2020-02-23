@@ -11,6 +11,7 @@ import (
 	"github.com/kelseyhightower/envconfig"
 
 	"github.com/mikeder/globber/cmd/globber/internal/handlers"
+	"github.com/mikeder/globber/internal/auth"
 	"github.com/mikeder/globber/internal/blog"
 	"github.com/mikeder/globber/internal/database"
 
@@ -31,11 +32,12 @@ func run() error {
 	}()
 
 	cfg := struct {
-		DbUser   string `default:"root" desc:"Username for database connection."`
-		DbPass   string `default:"root" desc:"Password for database connection."`
-		DbHost   string `default:"db" desc:"Hostname for database connection."`
-		DbName   string `default:"blog" desc:"Database schema name."`
-		SiteName string `default:"TestBlog" desc:"Name to be used for Title tags."`
+		DbUser      string `default:"root" desc:"Username for database connection."`
+		DbPass      string `default:"root" desc:"Password for database connection."`
+		DbHost      string `default:"db" desc:"Hostname for database connection."`
+		DbName      string `default:"blog" desc:"Database schema name."`
+		SiteName    string `default:"TestBlog" desc:"Name to be used for Title tags."`
+		TokenSecret string `default:"SUBERSECRETT" desc:"Secret string for generating auth tokens"`
 	}{}
 
 	if err := envconfig.Process("myapp", &cfg); err != nil {
@@ -66,10 +68,15 @@ func run() error {
 	db.SetMaxOpenConns(10)
 	db.SetMaxIdleConns(2)
 
+	authMan := auth.NewManager(db, cfg.TokenSecret)
+
+	// print a token for debugging auth endpoints
+	log.Println(authMan.DebugToken())
+
 	blogStore := blog.New(db)
 
 	handlerCFG := handlers.Config{SiteName: cfg.SiteName}
-	handler := handlers.New(blogStore, &handlerCFG)
+	handler := handlers.New(authMan, blogStore, &handlerCFG)
 
 	server := &http.Server{
 		Addr:         ":3000",
