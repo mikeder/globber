@@ -1,21 +1,29 @@
 package handlers
 
 import (
-	"database/sql"
+	"fmt"
 	"html/template"
-	"io/ioutil"
-	"log"
 	"net/http"
-	"strconv"
-	"strings"
 	"time"
+
+	jwt "github.com/dgrijalva/jwt-go"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
+	"github.com/go-chi/jwtauth"
 	"github.com/mikeder/globber/internal/blog"
-	"github.com/mikeder/globber/internal/web"
-	"github.com/pkg/errors"
 )
+
+var tokenAuth *jwtauth.JWTAuth
+
+func init() {
+	tokenAuth = jwtauth.New("HS256", []byte("secret"), nil)
+
+	// For debugging/example purposes, we generate and print
+	// a sample jwt token with claims `user_id:123` here:
+	_, tokenString, _ := tokenAuth.Encode(jwt.MapClaims{"user_id": 123})
+	fmt.Printf("DEBUG: a sample jwt is %s\n\n", tokenString)
+}
 
 // Config contains contextual information for use within handlers.
 type Config struct {
@@ -25,161 +33,69 @@ type Config struct {
 // New returns an http.Handler with routes to support
 // the API for this application.
 func New(bs *blog.Store, cfg *Config) http.Handler {
-	api := api{
+	site := site{
 		blogStore: bs,
 		config:    cfg,
 	}
-	api.loadTemplates()
+	site.loadTemplates()
 
 	router := chi.NewRouter()
 
-	// add middlewares
+	// add global middleware
 	router.Use(middleware.RequestID)
 	router.Use(middleware.RealIP)
 	router.Use(middleware.Logger)
 	router.Use(middleware.Recoverer)
 	router.Use(middleware.Timeout(60 * time.Second))
 
-	// add routes
-	router.Get("/*", api.root)
-	router.Get("/", api.root)
-	router.Get("/blog", api.blog)
-	// router.Get("/blog/new", api.new)
-	router.Get("/blog/archive", api.archive)
-	router.Get("/blog/entry/{slug}", api.blogPost)
+	// Public routes
+	router.Group(func(r chi.Router) {
+		// auth handlers
+		// router.Post("/auth/login", api.auth.login)
+		// router.Post("/auth/logout", api.auth.logout)
+	
+		router.Get("/*", site.root)
+		router.Get("/blog", site.blogPage)
+		router.Get("/blog/archive", site.blogArchive)
+		router.Get("/blog/entry/{slug}", site.blogEntry)
 
-	router.Get("/favicon.ico", faviconHandler)
+		router.Get("/favicon.ico", faviconHandler)
 
-	fs := http.FileServer(http.Dir("./static/"))
-	router.Get("/static/*", http.HandlerFunc(http.StripPrefix("/static/", fs).ServeHTTP))
+		fs := http.FileServer(http.Dir("./static/"))
+		router.Get("/static/*", http.HandlerFunc(http.StripPrefix("/static/", fs).ServeHTTP))
+	})
+
+	// Protected routes
+	router.Group(func(r chi.Router) {
+		// Seek, verify and validate JWT tokens
+		r.Use(jwtauth.Verifier(tokenAuth))
+
+		// Handle valid / invalid tokens. In this example, we use
+		// the provided authenticator middleware, but you can write your
+		// own very easily, look at the Authenticator method in jwtauth.go
+		// and tweak it, its not scary.
+		r.Use(jwtauth.Authenticator)
+
+		r.Get("/admin", func(w http.ResponseWriter, r *http.Request) {
+			_, claims, _ := jwtauth.FromContext(r.Context())
+			w.Write([]byte(fmt.Sprintf("protected area. hi %v", claims["user_id"])))
+		})
+	})
 
 	return router
 }
 
+// api contains json/rest handlers
 type api struct {
+	auth
+}
+
+// auth contains authentication/authorization handlers
+type auth struct{}
+
+// site contains handlers for rendering page templates
+type site struct {
 	blogStore *blog.Store
 	config    *Config
 	templates *template.Template
-}
-
-func faviconHandler(w http.ResponseWriter, r *http.Request) {
-	http.ServeFile(w, r, "./static/favicon.ico")
-}
-
-func (a *api) loadTemplates() {
-	var allFiles []string
-	files, err := ioutil.ReadDir("./templates")
-	if err != nil {
-		log.Fatal(err)
-	}
-	for _, file := range files {
-		filename := file.Name()
-		if strings.HasSuffix(filename, ".html") {
-			allFiles = append(allFiles, "./templates/"+filename)
-		}
-	}
-
-	templates, err := template.ParseFiles(allFiles...)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	templates.Funcs(template.FuncMap{
-		"html": func(value string) template.HTML {
-			return template.HTML(value)
-		},
-	})
-	a.templates = templates
-}
-
-func (a *api) blog(w http.ResponseWriter, r *http.Request) {
-	authed := true
-	pagetitle := a.config.SiteName + " - Blog"
-	page, ok := r.URL.Query()["page"]
-	if !ok {
-		page = []string{"0"}
-	}
-
-	pageNum, err := strconv.Atoi(page[0])
-	if err != nil {
-		log.Println(err)
-	}
-
-	posts, err := a.blogStore.GetPosts(r.Context(), pageNum)
-	if err != nil {
-		log.Println(errors.Wrap(err, "getting posts from database"))
-	}
-
-	data := struct {
-		Authenticated *bool
-		PageTitle     *string
-		Posts         []blog.Post
-	}{
-		Authenticated: &authed,
-		PageTitle:     &pagetitle,
-		Posts:         posts,
-	}
-	a.loadTemplates()
-	web.Render(w, a.templates.Lookup("blog.html"), data)
-}
-func (a *api) archive(w http.ResponseWriter, r *http.Request) {
-	authed := true
-	pagetitle := a.config.SiteName + " - Blog"
-
-	posts, err := a.blogStore.GetArchive(r.Context())
-	if err != nil {
-		log.Println(errors.Wrap(err, "getting archive posts from database"))
-	}
-
-	data := struct {
-		Authenticated *bool
-		PageTitle     *string
-		Posts         []blog.Post
-	}{
-		Authenticated: &authed,
-		PageTitle:     &pagetitle,
-		Posts:         posts,
-	}
-	a.loadTemplates()
-	web.Render(w, a.templates.Lookup("archive.html"), data)
-}
-
-func (a *api) blogPost(w http.ResponseWriter, r *http.Request) {
-	slug := chi.URLParam(r, "slug")
-	post, err := a.blogStore.GetPostBySlug(r.Context(), slug)
-	if err != nil {
-		switch err {
-		case sql.ErrNoRows:
-			w.WriteHeader(http.StatusNotFound)
-			return
-		default:
-			log.Print(err.Error())
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-	}
-
-	data := struct {
-		Authenticated bool
-		PageTitle     string
-		Posts         []blog.Post
-	}{
-		Authenticated: true,
-		PageTitle:     a.config.SiteName + " - Blog",
-		Posts:         []blog.Post{*post},
-	}
-	a.loadTemplates()
-	web.Render(w, a.templates.Lookup("blog.html"), data)
-}
-
-func (a *api) root(w http.ResponseWriter, r *http.Request) {
-	a.loadTemplates()
-	data := struct {
-		Authenticated bool
-		PageTitle     string
-	}{
-		Authenticated: false,
-		PageTitle:     a.config.SiteName + " - Home",
-	}
-	web.Render(w, a.templates.Lookup("home.html"), data)
 }

@@ -1,6 +1,10 @@
+# github.com/dgrijalva/jwt-go v3.2.0+incompatible
+github.com/dgrijalva/jwt-go
 # github.com/go-chi/chi v4.0.3+incompatible
 github.com/go-chi/chi
 github.com/go-chi/chi/middleware
+# github.com/go-chi/jwtauth v4.0.4+incompatible
+github.com/go-chi/jwtauth
 # github.com/go-sql-driver/mysql v1.5.0
 github.com/go-sql-driver/mysql
 # github.com/kelseyhightower/envconfig v1.4.0

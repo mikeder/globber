@@ -6,3 +6,5 @@ build:
 image:
 	docker build . -t mikeder/globber:latest
 
+run:
+	@docker-compose up --build

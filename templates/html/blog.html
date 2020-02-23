@@ -8,8 +8,8 @@
     <div class="container" style="padding-top: 1rem;">
 
         <ul>
-            {{ if .Posts }}
-            {{range .Posts}}
+            {{ if .Entries }}
+            {{range .Entries}}
             <a href="/blog/entry/{{ .Slug }}">
                 <h2>{{.Title}}</h2>
             </a>

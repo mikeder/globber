@@ -7,8 +7,8 @@
 
     <div class="container" style="padding-top: 1rem;">
         <ul>
-            {{ if .Posts }}
-            {{range .Posts}}
+            {{ if .Entries }}
+            {{range .Entries}}
             <li class="list-group-item list-group-item-action list-group-item-heading">
                 <a href="/blog/entry/{{ .Slug }}">
                     <h3>{{.Title}}</h3>
