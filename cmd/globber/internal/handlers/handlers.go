@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"fmt"
 	"html/template"
 	"net/http"
 	"time"
@@ -21,14 +20,9 @@ type Config struct {
 // New returns an http.Handler with routes to support
 // the API for this application.
 func New(authMan *auth.Manager, bs *blog.Store, cfg *Config) http.Handler {
-	api := api{
-		admin: adminAPI{
-			manager: authMan,
-		},
-		auth: authAPI{
-			manager: authMan,
-		},
-	}
+	adminAPI := adminAPI{authMan}
+	authAPI := authAPI{authMan}
+
 	site := site{
 		blogStore: bs,
 		config:    cfg,
@@ -47,7 +41,7 @@ func New(authMan *auth.Manager, bs *blog.Store, cfg *Config) http.Handler {
 	// Public routes
 	router.Group(func(r chi.Router) {
 		// auth handlers
-		router.Post("/auth/login", api.auth.Login)
+		router.Post("/auth/login", authAPI.Login)
 
 		router.Get("/*", site.root)
 		router.Get("/blog", site.blogPage)
@@ -68,22 +62,11 @@ func New(authMan *auth.Manager, bs *blog.Store, cfg *Config) http.Handler {
 		// Handle valid / invalid tokens
 		r.Use(jwtauth.Authenticator)
 
-		r.Get("/admin", func(w http.ResponseWriter, r *http.Request) {
-			_, claims, _ := jwtauth.FromContext(r.Context())
-			w.Write([]byte(fmt.Sprintf("protected area. hi %v", claims["name"])))
-		})
-
-		r.Post("/admin/user/add", api.admin.AddUser)
+		r.Post("/admin/user/add", adminAPI.AddUser)
 
 	})
 
 	return router
-}
-
-// api contains json/rest handlers
-type api struct {
-	admin adminAPI
-	auth  authAPI
 }
 
 // adminAPI contains admin level handlers
