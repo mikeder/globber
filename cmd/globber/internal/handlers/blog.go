@@ -62,6 +62,11 @@ func (s *site) blogEntry(w http.ResponseWriter, r *http.Request) {
 	web.Render(w, s.templates.Lookup("blog.html"), data)
 }
 
+func (s *site) blogEntryNew(w http.ResponseWriter, r *http.Request) {
+	s.loadTemplates()
+	web.Render(w, s.templates.Lookup("compose.html"), nil)
+}
+
 func (s *site) blogPage(w http.ResponseWriter, r *http.Request) {
 	authed := true
 	pagetitle := s.config.SiteName + " - Blog"

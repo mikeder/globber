@@ -64,6 +64,9 @@ func New(authMan *auth.Manager, bs *blog.Store, cfg *Config) http.Handler {
 
 		r.Post("/admin/user/add", adminAPI.AddUser)
 
+		r.Get("/blog/entry/new", site.blogEntryNew)
+		r.Post("/blog/entry/new", site.blogEntryNew)
+
 	})
 
 	return router

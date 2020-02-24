@@ -1,40 +1,118 @@
 <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-    <a class="navbar-brand" href="/">{{ .PageTitle }}</a>
-    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarColor01"
-        aria-controls="navbarColor01" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-    </button>
+  <a class="navbar-brand" href="/">{{ .PageTitle }}</a>
+  <button
+    class="navbar-toggler"
+    type="button"
+    data-toggle="collapse"
+    data-target="#navbarColor01"
+    aria-controls="navbarColor01"
+    aria-expanded="false"
+    aria-label="Toggle navigation"
+  >
+    <span class="navbar-toggler-icon"></span>
+  </button>
 
-    <div class="collapse navbar-collapse" id="navbarColor01">
-        <ul class="navbar-nav mr-auto">
-            <li class="nav-item">
-                <a class="nav-link" href="/">Home</a>
-            </li>
-            <li class="nav-item dropdown">
-                <a class="nav-link dropdown-toggle" href="/blog" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                    Blog
-                </a>
-                <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-                  <a class="dropdown-item" href="/blog?page=0">New</a>
-                  <div class="dropdown-divider"></div>
-                  <a class="dropdown-item" href="/blog/archive">Archive</a>
-                </div>
-              </li>
-            <li class="nav-item">
-                <a class="nav-link" href="/photos">Photos</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="https://music.sqweeb.net">Music</a>
-            </li>
-        </ul>
-        {{if .Authenticated}}
-            <form class="form-inline my-2 my-lg-0">
-                <button class="btn btn-danger my-2 my-sm-0" type="submit">Logout</button>
-            </form>
-        {{else}}
-            <form class="form-inline my-2 my-lg-0">
-                <button class="btn btn-success my-2 my-sm-0" type="submit">Login</button>
-            </form>
-        {{end}}
-    </div>
+  <div class="collapse navbar-collapse" id="navbarColor01">
+    <ul class="navbar-nav mr-auto">
+      <li class="nav-item">
+        <a class="nav-link" href="/">Home</a>
+      </li>
+      <li class="nav-item dropdown">
+        <a
+          class="nav-link dropdown-toggle"
+          href="/blog"
+          id="navbarDropdown"
+          role="button"
+          data-toggle="dropdown"
+          aria-haspopup="true"
+          aria-expanded="false"
+        >
+          Blog
+        </a>
+        <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+          <a class="dropdown-item" href="/blog?page=0">New</a>
+          <div class="dropdown-divider"></div>
+          <a class="dropdown-item" href="/blog/archive">Archive</a>
+        </div>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="/photos">Photos</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="https://music.sqweeb.net">Music</a>
+      </li>
+    </ul>
+    {{if .Authenticated}}
+    <form class="form-inline my-2 my-lg-0">
+      <button class="btn btn-danger my-2 my-sm-0" id="logout">Logout</button>
+    </form>
+    {{else}}
+    <form class="form-inline my-2 my-lg-0">
+      <button
+        type="button"
+        class="btn btn-success my-2 my-sm-0"
+        data-toggle="modal"
+        data-target="#loginModal"
+        id="login"
+      >
+        Login
+      </button>
+    </form>
+    {{end}}
+  </div>
 </nav>
+
+<!-- Modal -->
+<div
+  class="modal fade"
+  id="loginModal"
+  tabindex="-1"
+  role="dialog"
+  aria-labelledby="loginModalLabel"
+  aria-hidden="true"
+>
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="loginModalLabel">Login</h5>
+        <button
+          type="button"
+          class="close"
+          data-dismiss="modal"
+          aria-label="Close"
+        >
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form id="login-form" class="login-form">
+          <input type="text" id="email" name="email" />
+          <input type="password" id="password" name="password" />
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">
+          Close
+        </button>
+        <button type="submit" onclick="login()" class="btn btn-primary">Submit</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function login() {
+    var email = document.forms["login-form"]["email"].value;
+    var password = document.forms["login-form"]["password"].value;
+
+    var xhttp = new XMLHttpRequest();
+    xhttp.onreadystatechange = function() {
+      if (this.readyState == 4 && this.status == 200) {
+        alert(this.responseText);
+      }
+    };
+    xhttp.open("POST", "/auth/login", true);
+    xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+    xhttp.send("email=" + email + "&password=" + password);
+  }
+</script>

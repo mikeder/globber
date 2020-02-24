@@ -18,10 +18,10 @@ func (a *adminAPI) AddUser(w http.ResponseWriter, r *http.Request) {
 			Error  string `json:"error"`
 			Reason string `json:"reason,omitempty"`
 		}{
-			Error:  "Forbidden",
+			Error:  "forbidden",
 			Reason: err.Error(),
 		}
-		web.Respond(w, resp, http.StatusInternalServerError)
+		web.Respond(w, resp, http.StatusForbidden)
 		return
 	}
 	resp := struct {

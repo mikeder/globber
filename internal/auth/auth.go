@@ -3,6 +3,7 @@ package auth
 import (
 	"context"
 	"database/sql"
+	"strings"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
@@ -13,12 +14,14 @@ import (
 	"github.com/mikeder/globber/internal/models"
 )
 
-// tokens are good for 5 minutes
-var tokenExpiry = time.Now().Add(5 * time.Minute)
+// tokens are good for 30 minutes
+var tokenExp = time.Now().Add(30 * time.Minute)
+var tokenIss = "sqweeb.net"
 
 // Claims holds our authorized claims and standard JWT claims.
 type Claims struct {
-	Username string `json:"username"`
+	Name  string `json:"name"`
+	Email string `json:"email"`
 	jwt.StandardClaims
 }
 
@@ -34,53 +37,52 @@ func NewManager(userDB *sql.DB, secret string) *Manager {
 }
 
 // PasswordLogin performs password authentication of a user.
-func (m *Manager) PasswordLogin(ctx context.Context, c *Credentials) (string, error) {
+func (m *Manager) PasswordLogin(ctx context.Context, c *Credentials) (*jwt.Token, string, error) {
 	if c.Email == "" {
-		return "", ErrUserMissingField{"email"}
+		return nil, "", ErrUserMissingField{"email"}
 	}
 	if c.Password == "" {
-		return "", ErrUserMissingField{"password"}
+		return nil, "", ErrUserMissingField{"password"}
 	}
 
 	user, err := models.AuthorByEmail(ctx, m.userDB, c.Email)
 	if err != nil {
-		return "", errors.Wrap(err, "getting user from database")
+		return nil, "", errors.Wrap(err, "getting user from database")
 	}
 
 	valid := checkPasswordHash(c.Password, user.HashedPassword)
 	if !valid {
-		return "", errors.New("password did not match")
+		return nil, "", errors.New("password did not match")
 	}
 
 	// Create the JWT claims, which includes the username and expiry time
 	claims := &Claims{
-		Username: c.Email,
+		Name:  user.Name,
+		Email: user.Email,
 		StandardClaims: jwt.StandardClaims{
-			// In JWT, the expiry time is expressed as unix milliseconds
-			ExpiresAt: tokenExpiry.Unix(),
+			Audience:  "globber",
+			ExpiresAt: tokenExp.Unix(),
+			Issuer:    tokenIss,
+			IssuedAt:  time.Now().Unix(),
 		},
 	}
 
-	_, tokenString, err := m.TokenAuth.Encode(claims)
+	token, tokenString, err := m.TokenAuth.Encode(claims)
 
-	return tokenString, err
+	return token, tokenString, err
 }
 
 // AddUser adds a new User to the database.
 func (m *Manager) AddUser(ctx context.Context, u *User) error {
-	_, claims, err := jwtauth.FromContext(ctx)
-	if caller, ok := claims["username"]; !ok || caller.(string) != "SuperUser" {
-		return errors.New("not authorized to add user")
+	// validate incoming user fields
+	if err := u.validate(); err != nil {
+		return err
 	}
 
-	if u.Email == "" {
-		return ErrUserMissingField{"email"}
-	}
-	if u.Name == "" {
-		return ErrUserMissingField{"name"}
-	}
-	if u.Password == "" {
-		return ErrUserMissingField{"password"}
+	// validate incoming auth token
+	_, claims, err := jwtauth.FromContext(ctx)
+	if caller, ok := claims["name"]; !ok || !strings.EqualFold(caller.(string), "superuser") {
+		return errors.New("not authorized to add user")
 	}
 
 	author, err := models.AuthorByEmail(ctx, m.userDB, u.Email)
@@ -114,7 +116,7 @@ func (m *Manager) AddUser(ctx context.Context, u *User) error {
 func (m *Manager) DebugToken() string {
 	expires := time.Now().Add(time.Hour * 1)
 	_, tokenString, _ := m.TokenAuth.Encode(Claims{
-		Username: "SuperUser",
+		Name: "superuser",
 		StandardClaims: jwt.StandardClaims{
 			Audience:  "debug",
 			ExpiresAt: expires.Unix(),

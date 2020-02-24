@@ -10,11 +10,18 @@ import (
 )
 
 func (a *authAPI) Login(w http.ResponseWriter, r *http.Request) {
-	creds := new(auth.Credentials)
-	decoder := json.NewDecoder(r.Body)
-	decoder.Decode(&creds)
+	r.ParseForm()
+	creds := &auth.Credentials{
+		Email:    r.Form.Get("email"),
+		Password: r.Form.Get("password"),
+	}
 
-	token, err := a.manager.PasswordLogin(r.Context(), creds)
+	if creds.Email == "" || creds.Password == "" {
+		decoder := json.NewDecoder(r.Body)
+		decoder.Decode(&creds)
+	}
+
+	_, tokenString, err := a.manager.PasswordLogin(r.Context(), creds)
 	if err != nil {
 		log.Println(err)
 		resp := struct {
@@ -37,8 +44,16 @@ func (a *authAPI) Login(w http.ResponseWriter, r *http.Request) {
 	resp := struct {
 		Token string `json:"token"`
 	}{
-		Token: token,
+		Token: tokenString,
 	}
+
+	c := http.Cookie{
+		Name:  "token",
+		Path:  "/",
+		Value: tokenString,
+	}
+
+	http.SetCookie(w, &c)
 
 	if err := web.Respond(w, resp, http.StatusOK); err != nil {
 		log.Println(err)
