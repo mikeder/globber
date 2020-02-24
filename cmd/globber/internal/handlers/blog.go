@@ -13,22 +13,19 @@ import (
 )
 
 func (s *site) blogArchive(w http.ResponseWriter, r *http.Request) {
-	authed := true
-	pagetitle := s.config.SiteName + " - Blog"
-
 	posts, err := s.blogStore.GetArchive(r.Context())
 	if err != nil {
 		log.Println(errors.Wrap(err, "getting archive posts from database"))
 	}
 
 	data := struct {
-		Authenticated *bool
-		PageTitle     *string
-		Entries       []blog.Entry
+		LoggedIn  bool
+		PageTitle string
+		Entries   []blog.Entry
 	}{
-		Authenticated: &authed,
-		PageTitle:     &pagetitle,
-		Entries:       posts,
+		LoggedIn:  true,
+		PageTitle: s.config.SiteName + " - Blog",
+		Entries:   posts,
 	}
 	s.loadTemplates()
 	web.Render(w, s.templates.Lookup("archive.html"), data)
@@ -50,13 +47,13 @@ func (s *site) blogEntry(w http.ResponseWriter, r *http.Request) {
 	}
 
 	data := struct {
-		Authenticated bool
-		PageTitle     string
-		Posts         []blog.Entry
+		LoggedIn  bool
+		PageTitle string
+		Posts     []blog.Entry
 	}{
-		Authenticated: true,
-		PageTitle:     s.config.SiteName + " - Blog",
-		Posts:         []blog.Entry{entry},
+		LoggedIn:  true,
+		PageTitle: s.config.SiteName + " - Blog",
+		Posts:     []blog.Entry{entry},
 	}
 	s.loadTemplates()
 	web.Render(w, s.templates.Lookup("blog.html"), data)
@@ -68,14 +65,9 @@ func (s *site) blogEntryNew(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *site) blogPage(w http.ResponseWriter, r *http.Request) {
-	authed := true
-	pagetitle := s.config.SiteName + " - Blog"
-	page, ok := r.URL.Query()["page"]
-	if !ok {
-		page = []string{"0"}
-	}
+	page := r.URL.Query().Get("page")
 
-	pageNum, err := strconv.Atoi(page[0])
+	pageNum, err := strconv.Atoi(page)
 	if err != nil {
 		log.Println(err)
 	}
@@ -86,13 +78,13 @@ func (s *site) blogPage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	data := struct {
-		Authenticated *bool
-		PageTitle     *string
-		Entries       []blog.Entry
+		LoggedIn  bool
+		PageTitle string
+		Entries   []blog.Entry
 	}{
-		Authenticated: &authed,
-		PageTitle:     &pagetitle,
-		Entries:       posts,
+		LoggedIn:  true,
+		PageTitle: s.config.SiteName + " - Blog",
+		Entries:   posts,
 	}
 	s.loadTemplates()
 	web.Render(w, s.templates.Lookup("blog.html"), data)
@@ -101,11 +93,11 @@ func (s *site) blogPage(w http.ResponseWriter, r *http.Request) {
 func (s *site) root(w http.ResponseWriter, r *http.Request) {
 	s.loadTemplates()
 	data := struct {
-		Authenticated bool
-		PageTitle     string
+		LoggedIn  bool
+		PageTitle string
 	}{
-		Authenticated: false,
-		PageTitle:     s.config.SiteName + " - Home",
+		LoggedIn:  false,
+		PageTitle: s.config.SiteName + " - Home",
 	}
 	web.Render(w, s.templates.Lookup("home.html"), data)
 }

@@ -48,7 +48,7 @@ func (a *authAPI) Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	c := http.Cookie{
-		Name:  "token",
+		Name:  "jwt",
 		Path:  "/",
 		Value: tokenString,
 	}

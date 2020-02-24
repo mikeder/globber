@@ -6,7 +6,7 @@
 <body>
 
     <div class="container" style="padding-top: 1rem;">
-        <form action="/blog/entry/new" method="post" class="compose">
+        <form action="/blog/entry/new" method="post" name="compose-form" class="compose">
             <div style="margin-bottom:5px"><input name="title" type="text" class="title" value="{{ .Entry.Title }}"/></div>
             <div style="margin-bottom:5px">
                 <textarea name="markdown" rows="30" cols="40" class="markdown">
@@ -18,10 +18,10 @@
             <div>
                 <div style="float:right"><a href="http://daringfireball.net/projects/markdown/syntax">Syntax documentation</a></div>
                 {{ if .Entry }}
-                    <input type="submit" value="Save" class="submit"/>
+                    <input type="submit" onclick="publish()"  value="Save" class="submit"/>
                     &nbsp;<a href="/blog/entry/{{ .Entry.Slug }}">Cancel</a>
                 {{ else }}
-                    <input type="submit" value="Publish" class="submit"/>
+                    <input type="submit" onclick="publish()" value="Publish" class="submit"/>
                     &nbsp;<a href="/blog/">Cancel</a>
                 {{ end }}
             </div>
