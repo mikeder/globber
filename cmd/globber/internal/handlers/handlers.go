@@ -38,6 +38,9 @@ func New(authMan *auth.Manager, bs *blog.Store, cfg *Config) http.Handler {
 	router.Use(middleware.Recoverer)
 	router.Use(middleware.Timeout(60 * time.Second))
 
+	// Seek, verify and validate JWT tokens for all requests
+	router.Use(jwtauth.Verifier(authMan.TokenAuth))
+
 	// Public routes
 	router.Group(func(r chi.Router) {
 		// auth handlers
@@ -56,16 +59,13 @@ func New(authMan *auth.Manager, bs *blog.Store, cfg *Config) http.Handler {
 
 	// Protected routes
 	router.Group(func(r chi.Router) {
-		// Seek, verify and validate JWT tokens
-		r.Use(jwtauth.Verifier(authMan.TokenAuth))
-
 		// Handle valid / invalid tokens
 		r.Use(jwtauth.Authenticator)
 
 		r.Post("/admin/user/add", adminAPI.AddUser)
 
-		r.Get("/blog/entry/new", site.blogEntryNew)
-		r.Post("/blog/entry/new", site.blogEntryNew)
+		r.Get("/blog/compose", site.blogCompose)
+		r.Post("/blog/compose", site.blogCompose)
 
 	})
 

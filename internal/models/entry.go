@@ -60,6 +60,7 @@ func EntriesByPage(ctx context.Context, db XODB, page int) ([]*Entry, error) {
 			&e.HTML,
 			&e.Published,
 			&e.Updated,
+			&e.Highlight,
 		)
 		if err != nil {
 			return entries, err

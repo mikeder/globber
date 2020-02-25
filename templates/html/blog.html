@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 {{ template "part_head.html"}}
-{{ template "part_nav.html" .LoggedIn}}
+{{ template "part_nav.html" . }}
 
 <body>
 
@@ -17,6 +17,11 @@
             <article>
                 {{html .HTML}}
             </article>
+            {{ if $.Authenticated }}
+            <a href="/blog/compose?id={{ .ID }}">
+                Edit Post
+            </a>
+            {{ end }}
             <hr>
             {{end}}
             {{ else }}

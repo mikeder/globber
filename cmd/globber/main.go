@@ -60,6 +60,7 @@ func run() error {
 	dbCFG.Net = "tcp"
 	dbCFG.Passwd = cfg.DbPass
 	dbCFG.User = cfg.DbUser
+	dbCFG.ParseTime = true
 
 	db, err := database.New(dbCFG)
 	if err != nil {

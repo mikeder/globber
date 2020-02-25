@@ -1,15 +1,15 @@
 <!doctype html>
 <html lang="en">
 {{ template "part_head.html" }}
-{{ template "part_nav.html" }}
+{{ template "part_nav.html" . }}
 
 <body>
 
     <div class="container" style="padding-top: 1rem;">
-        <form action="/blog/entry/new" method="post" name="compose-form" class="compose">
-            <div style="margin-bottom:5px"><input name="title" type="text" class="title" value="{{ .Entry.Title }}"/></div>
+        <form name="compose-form" class="compose" method="POST" action="/blog/compose{{if .Entry}}?id={{.Entry.ID}}{{end}}">
+            <div style="margin-bottom:5px"><input name="title" type="text" class="title" value="{{if .Entry}}{{.Entry.Title}}{{end}}"/></div>
             <div style="margin-bottom:5px">
-                <textarea name="markdown" rows="30" cols="40" class="markdown">
+                <textarea name="markdown" class="markdown-form">
                     {{ if .Entry }}
                         {{ .Entry.Markdown }}
                     {{ end }}
@@ -18,31 +18,17 @@
             <div>
                 <div style="float:right"><a href="http://daringfireball.net/projects/markdown/syntax">Syntax documentation</a></div>
                 {{ if .Entry }}
-                    <input type="submit" onclick="publish()"  value="Save" class="submit"/>
+                    <input type="submit" onclick="saveEntry({{.Entry.ID}})"  value="Save" class="submit"/>
                     &nbsp;<a href="/blog/entry/{{ .Entry.Slug }}">Cancel</a>
                 {{ else }}
-                    <input type="submit" onclick="publish()" value="Publish" class="submit"/>
+                    <input type="submit" onclick="publishEntry()" value="Publish" class="submit"/>
                     &nbsp;<a href="/blog/">Cancel</a>
                 {{ end }}
             </div>
-          </form>
+          </form><br>
     </div>
-    <script type="text/javascript">      
-        $(function() {
-            $("input[name=title]").select();
-            $("form.compose").submit(function() {
-                var required = ["title", "markdown"];
-                var form = $(this).get(0);
-                for (var i = 0; i < required.length; i++) {
-                    if (!form[required[i]].value) {
-                        $(form[required[i]]).select();
-                        return false;
-                    }
-                }
-                return true;
-            });
-        });
-    </script>
+    <script src="/static/js/entry.js"></script>
+    
     {{ template "part_footer.html" }}
 </body>
 

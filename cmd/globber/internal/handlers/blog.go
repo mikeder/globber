@@ -1,32 +1,58 @@
 package handlers
 
 import (
+	"context"
 	"database/sql"
 	"log"
 	"net/http"
 	"strconv"
 
 	"github.com/go-chi/chi"
+	"github.com/go-chi/jwtauth"
+	"github.com/gosimple/slug"
 	"github.com/mikeder/globber/internal/blog"
+	"github.com/mikeder/globber/internal/models"
 	"github.com/mikeder/globber/internal/web"
 	"github.com/pkg/errors"
+	"github.com/russross/blackfriday"
 )
 
+type siteData struct {
+	Authenticated bool
+	SiteName      string
+}
+
+type blogPageData struct {
+	siteData
+	Entries []blog.Entry
+}
+
+type blogComposeData struct {
+	siteData
+	Entry *blog.Entry
+}
+
+func isAuthed(ctx context.Context) bool {
+	token, _, err := jwtauth.FromContext(ctx)
+	if err != nil {
+		log.Println(err)
+		return false
+	}
+	if token != nil && token.Valid {
+		return true
+	}
+	return false
+}
+
 func (s *site) blogArchive(w http.ResponseWriter, r *http.Request) {
-	posts, err := s.blogStore.GetArchive(r.Context())
+	entries, err := s.blogStore.GetArchive(r.Context())
 	if err != nil {
 		log.Println(errors.Wrap(err, "getting archive posts from database"))
 	}
 
-	data := struct {
-		LoggedIn  bool
-		PageTitle string
-		Entries   []blog.Entry
-	}{
-		LoggedIn:  true,
-		PageTitle: s.config.SiteName + " - Blog",
-		Entries:   posts,
-	}
+	sd := siteData{isAuthed(r.Context()), s.config.SiteName}
+	data := blogPageData{sd, entries}
+
 	s.loadTemplates()
 	web.Render(w, s.templates.Lookup("archive.html"), data)
 }
@@ -46,22 +72,82 @@ func (s *site) blogEntry(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	data := struct {
-		LoggedIn  bool
-		PageTitle string
-		Posts     []blog.Entry
-	}{
-		LoggedIn:  true,
-		PageTitle: s.config.SiteName + " - Blog",
-		Posts:     []blog.Entry{entry},
-	}
+	sd := siteData{isAuthed(r.Context()), s.config.SiteName}
+	data := blogPageData{sd, []blog.Entry{entry}}
+
 	s.loadTemplates()
 	web.Render(w, s.templates.Lookup("blog.html"), data)
 }
 
-func (s *site) blogEntryNew(w http.ResponseWriter, r *http.Request) {
+func (s *site) blogCompose(w http.ResponseWriter, r *http.Request) {
+	entryID := r.URL.Query().Get("id")
+	var entry *blog.Entry
+
+	if entryID != "" {
+		id, err := strconv.Atoi(entryID)
+		if err != nil {
+			log.Print(err)
+			return
+		}
+		entry, err = s.blogStore.GetEntryByID(r.Context(), int(id))
+		if err != nil && err != sql.ErrNoRows {
+			log.Print(err)
+			return
+		}
+	}
+
+	if r.Method == http.MethodPost {
+		if entry == nil {
+			entry = newEntry(r)
+		} else {
+			updateEntry(entry, r)
+		}
+		if err := s.blogStore.PostEntry(r.Context(), entry); err != nil {
+			log.Println(err)
+		}
+		sd := siteData{isAuthed(r.Context()), s.config.SiteName}
+		data := blogPageData{sd, []blog.Entry{*entry}}
+
+		s.loadTemplates()
+		web.Render(w, s.templates.Lookup("blog.html"), data)
+		return
+	}
+
+	sd := siteData{isAuthed(r.Context()), s.config.SiteName}
+	data := blogComposeData{sd, entry}
+
 	s.loadTemplates()
-	web.Render(w, s.templates.Lookup("compose.html"), nil)
+	web.Render(w, s.templates.Lookup("compose.html"), data)
+}
+
+func newEntry(r *http.Request) *blog.Entry {
+	// load form data and pass to store
+	r.ParseForm()
+	md := r.Form.Get("markdown")
+	html := blackfriday.Run([]byte(md))
+	title := r.Form.Get("title")
+
+	entry := &models.Entry{
+		AuthorID: 0,
+		Slug:     slug.Make(title),
+		Title:    title,
+		Markdown: md,
+		HTML:     string(html),
+	}
+
+	return &blog.Entry{entry}
+}
+
+func updateEntry(e *blog.Entry, r *http.Request) {
+	// load form data and pass to store
+	r.ParseForm()
+	md := r.Form.Get("markdown")
+	html := blackfriday.Run([]byte(md))
+	title := r.Form.Get("title")
+
+	e.Markdown = md
+	e.HTML = string(html)
+	e.Title = title
 }
 
 func (s *site) blogPage(w http.ResponseWriter, r *http.Request) {
@@ -72,32 +158,21 @@ func (s *site) blogPage(w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 	}
 
-	posts, err := s.blogStore.GetEntriesByPage(r.Context(), pageNum)
+	entries, err := s.blogStore.GetEntriesByPage(r.Context(), pageNum)
 	if err != nil {
 		log.Println(errors.Wrap(err, "getting posts from database"))
 	}
 
-	data := struct {
-		LoggedIn  bool
-		PageTitle string
-		Entries   []blog.Entry
-	}{
-		LoggedIn:  true,
-		PageTitle: s.config.SiteName + " - Blog",
-		Entries:   posts,
-	}
+	sd := siteData{isAuthed(r.Context()), s.config.SiteName}
+	data := blogPageData{sd, entries}
+
 	s.loadTemplates()
 	web.Render(w, s.templates.Lookup("blog.html"), data)
 }
 
 func (s *site) root(w http.ResponseWriter, r *http.Request) {
+	sd := siteData{isAuthed(r.Context()), s.config.SiteName}
+
 	s.loadTemplates()
-	data := struct {
-		LoggedIn  bool
-		PageTitle string
-	}{
-		LoggedIn:  false,
-		PageTitle: s.config.SiteName + " - Home",
-	}
-	web.Render(w, s.templates.Lookup("home.html"), data)
+	web.Render(w, s.templates.Lookup("home.html"), sd)
 }

@@ -5,20 +5,22 @@ package models
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"time"
 )
 
 // Entry represents a row from 'blog.entries'.
 type Entry struct {
-	ID        int       `json:"id"`        // id
-	AuthorID  int       `json:"author_id"` // author_id
-	Slug      string    `json:"slug"`      // slug
-	Title     string    `json:"title"`     // title
-	Markdown  string    `json:"markdown"`  // markdown
-	HTML      string    `json:"html"`      // html
-	Published time.Time `json:"published"` // published
-	Updated   time.Time `json:"updated"`   // updated
+	ID        int           `json:"id"`        // id
+	AuthorID  int           `json:"author_id"` // author_id
+	Slug      string        `json:"slug"`      // slug
+	Title     string        `json:"title"`     // title
+	Markdown  string        `json:"markdown"`  // markdown
+	HTML      string        `json:"html"`      // html
+	Published time.Time     `json:"published"` // published
+	Updated   time.Time     `json:"updated"`   // updated
+	Highlight sql.NullInt64 `json:"highlight"` // highlight
 
 	// xo fields
 	_exists, _deleted bool
@@ -45,14 +47,14 @@ func (e *Entry) Insert(ctx context.Context, db XODB) error {
 
 	// sql insert query, primary key provided by autoincrement
 	const sqlstr = `INSERT INTO blog.entries (` +
-		`author_id, slug, title, markdown, html, published, updated` +
+		`author_id, slug, title, markdown, html, published, updated, highlight` +
 		`) VALUES (` +
-		`?, ?, ?, ?, ?, ?, ?` +
+		`?, ?, ?, ?, ?, ?, ?, ?` +
 		`)`
 
 	// run query
-	XOLog(sqlstr, e.AuthorID, e.Slug, e.Title, e.Markdown, e.HTML, e.Published, e.Updated)
-	res, err := db.ExecContext(ctx, sqlstr, e.AuthorID, e.Slug, e.Title, e.Markdown, e.HTML, e.Published, e.Updated)
+	XOLog(sqlstr, e.AuthorID, e.Slug, e.Title, e.Markdown, e.HTML, e.Published, e.Updated, e.Highlight)
+	res, err := db.ExecContext(ctx, sqlstr, e.AuthorID, e.Slug, e.Title, e.Markdown, e.HTML, e.Published, e.Updated, e.Highlight)
 	if err != nil {
 		return err
 	}
@@ -86,12 +88,12 @@ func (e *Entry) Update(ctx context.Context, db XODB) error {
 
 	// sql query
 	const sqlstr = `UPDATE blog.entries SET ` +
-		`author_id = ?, slug = ?, title = ?, markdown = ?, html = ?, published = ?, updated = ?` +
+		`author_id = ?, slug = ?, title = ?, markdown = ?, html = ?, published = ?, updated = ?, highlight = ?` +
 		` WHERE id = ?`
 
 	// run query
-	XOLog(sqlstr, e.AuthorID, e.Slug, e.Title, e.Markdown, e.HTML, e.Published, e.Updated, e.ID)
-	_, err = db.ExecContext(ctx, sqlstr, e.AuthorID, e.Slug, e.Title, e.Markdown, e.HTML, e.Published, e.Updated, e.ID)
+	XOLog(sqlstr, e.AuthorID, e.Slug, e.Title, e.Markdown, e.HTML, e.Published, e.Updated, e.Highlight, e.ID)
+	_, err = db.ExecContext(ctx, sqlstr, e.AuthorID, e.Slug, e.Title, e.Markdown, e.HTML, e.Published, e.Updated, e.Highlight, e.ID)
 	return err
 }
 
@@ -142,7 +144,7 @@ func EntryByID(ctx context.Context, db XODB, id int) (*Entry, error) {
 
 	// sql query
 	const sqlstr = `SELECT ` +
-		`id, author_id, slug, title, markdown, html, published, updated ` +
+		`id, author_id, slug, title, markdown, html, published, updated, highlight ` +
 		`FROM blog.entries ` +
 		`WHERE id = ?`
 
@@ -152,7 +154,7 @@ func EntryByID(ctx context.Context, db XODB, id int) (*Entry, error) {
 		_exists: true,
 	}
 
-	err = db.QueryRowContext(ctx, sqlstr, id).Scan(&e.ID, &e.AuthorID, &e.Slug, &e.Title, &e.Markdown, &e.HTML, &e.Published, &e.Updated)
+	err = db.QueryRowContext(ctx, sqlstr, id).Scan(&e.ID, &e.AuthorID, &e.Slug, &e.Title, &e.Markdown, &e.HTML, &e.Published, &e.Updated, &e.Highlight)
 	if err != nil {
 		return nil, err
 	}
@@ -168,7 +170,7 @@ func EntriesByPublished(ctx context.Context, db XODB, published time.Time) ([]*E
 
 	// sql query
 	const sqlstr = `SELECT ` +
-		`id, author_id, slug, title, markdown, html, published, updated ` +
+		`id, author_id, slug, title, markdown, html, published, updated, highlight ` +
 		`FROM blog.entries ` +
 		`WHERE published = ?`
 
@@ -188,7 +190,7 @@ func EntriesByPublished(ctx context.Context, db XODB, published time.Time) ([]*E
 		}
 
 		// scan
-		err = q.Scan(&e.ID, &e.AuthorID, &e.Slug, &e.Title, &e.Markdown, &e.HTML, &e.Published, &e.Updated)
+		err = q.Scan(&e.ID, &e.AuthorID, &e.Slug, &e.Title, &e.Markdown, &e.HTML, &e.Published, &e.Updated, &e.Highlight)
 		if err != nil {
 			return nil, err
 		}
@@ -207,7 +209,7 @@ func EntryBySlug(ctx context.Context, db XODB, slug string) (*Entry, error) {
 
 	// sql query
 	const sqlstr = `SELECT ` +
-		`id, author_id, slug, title, markdown, html, published, updated ` +
+		`id, author_id, slug, title, markdown, html, published, updated, highlight ` +
 		`FROM blog.entries ` +
 		`WHERE slug = ?`
 
@@ -217,7 +219,7 @@ func EntryBySlug(ctx context.Context, db XODB, slug string) (*Entry, error) {
 		_exists: true,
 	}
 
-	err = db.QueryRowContext(ctx, sqlstr, slug).Scan(&e.ID, &e.AuthorID, &e.Slug, &e.Title, &e.Markdown, &e.HTML, &e.Published, &e.Updated)
+	err = db.QueryRowContext(ctx, sqlstr, slug).Scan(&e.ID, &e.AuthorID, &e.Slug, &e.Title, &e.Markdown, &e.HTML, &e.Published, &e.Updated, &e.Highlight)
 	if err != nil {
 		return nil, err
 	}
