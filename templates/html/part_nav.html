@@ -87,10 +87,8 @@
         </button>
       </div>
       <div class="modal-body">
-        <form id="login-form" class="login-form">
-          <label for="email">Email Address:</label><br />
-          <input type="text" id="email" name="email" placeholder="Enter email"/><br />
-          <label for="password">Password:</label><br />
+        <form id="login-form" class="login-form" action="/auth/login" method="POST">
+          <input type="text" id="email" name="email" placeholder="Email Address"/><br />
           <input type="password" id="password" name="password" placeholder="Password"/><br />
         </form>
       </div>
@@ -101,6 +99,7 @@
         <button
           type="submit"
           onclick="login()"
+          form="login-form"
           class="btn btn-primary"
           data-dismiss="modal"
         >

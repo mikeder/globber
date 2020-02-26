@@ -15,10 +15,10 @@
                 <textarea id="summernote" name="editordata"></textarea><br>
                 
                 {{ if .Entry }}
-                <input type="submit" onclick="saveEntry({{.Entry.ID}})" value="Save" class="submit" />
+                <input type="submit" value="Save" class="submit" />
                 &nbsp;<a href="/blog/entry/{{ .Entry.Slug }}">Cancel</a>
                 {{ else }}
-                <input type="submit" onclick="publishEntry()" value="Publish" class="submit" />
+                <input type="submit" value="Publish" class="submit" />
                 &nbsp;<a href="/blog/">Cancel</a>
                 {{ end }}
             </form>
