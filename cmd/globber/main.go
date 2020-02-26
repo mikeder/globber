@@ -18,6 +18,8 @@ import (
 	_ "net/http/pprof"
 )
 
+const envPrefix string = "globber"
+
 func main() {
 	if err := run(); err != nil {
 		log.SetOutput(os.Stderr)
@@ -40,7 +42,7 @@ func run() error {
 		TokenSecret string `default:"SUBERSECRETT" desc:"Secret string for generating auth tokens"`
 	}{}
 
-	if err := envconfig.Process("myapp", &cfg); err != nil {
+	if err := envconfig.Process(envPrefix, &cfg); err != nil {
 		return err
 	}
 
@@ -49,7 +51,7 @@ func run() error {
 	flag.Parse()
 
 	if *helpFlag {
-		return envconfig.Usage("", &cfg)
+		return envconfig.Usage(envPrefix, &cfg)
 	}
 
 	// Set a database connection string, this needs improvement.
