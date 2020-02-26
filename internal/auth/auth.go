@@ -15,7 +15,7 @@ import (
 )
 
 // tokens are good for 30 minutes
-var tokenExp = time.Now().Add(30 * time.Minute)
+var tokenExp = 30 * time.Minute
 var tokenIss = "sqweeb.net"
 
 // Claims holds our authorized claims and standard JWT claims.
@@ -61,7 +61,7 @@ func (m *Manager) PasswordLogin(ctx context.Context, c *Credentials) (*jwt.Token
 		Email: user.Email,
 		StandardClaims: jwt.StandardClaims{
 			Audience:  "globber",
-			ExpiresAt: tokenExp.Unix(),
+			ExpiresAt: time.Now().Add(tokenExp).Unix(),
 			Issuer:    tokenIss,
 			IssuedAt:  time.Now().Unix(),
 		},
