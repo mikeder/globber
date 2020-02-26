@@ -14,8 +14,9 @@ import (
 	"github.com/mikeder/globber/internal/models"
 	"github.com/mikeder/globber/internal/web"
 	"github.com/pkg/errors"
-	"github.com/russross/blackfriday"
 )
+
+const maxMemory int64 = 1 * 1.049e+6 // 1MB
 
 type siteData struct {
 	Authenticated bool
@@ -122,17 +123,20 @@ func (s *site) blogCompose(w http.ResponseWriter, r *http.Request) {
 
 func newEntry(r *http.Request) *blog.Entry {
 	// load form data and pass to store
-	r.ParseForm()
-	md := r.Form.Get("markdown")
-	html := blackfriday.Run([]byte(md))
+	if err := r.ParseMultipartForm(maxMemory); err != nil {
+		log.Print(err)
+		return nil
+	}
+
 	title := r.Form.Get("title")
+	html := r.Form.Get("editordata")
 
 	entry := &models.Entry{
 		AuthorID: 0,
 		Slug:     slug.Make(title),
 		Title:    title,
-		Markdown: md,
-		HTML:     string(html),
+		HTML:     html,
+		// Markdown: md,
 	}
 
 	return &blog.Entry{entry}
@@ -140,14 +144,16 @@ func newEntry(r *http.Request) *blog.Entry {
 
 func updateEntry(e *blog.Entry, r *http.Request) {
 	// load form data and pass to store
-	r.ParseForm()
-	md := r.Form.Get("markdown")
-	html := blackfriday.Run([]byte(md))
-	title := r.Form.Get("title")
+	if err := r.ParseMultipartForm(maxMemory); err != nil {
+		log.Print(err)
+		return
+	}
 
-	e.Markdown = md
-	e.HTML = string(html)
+	title := r.Form.Get("title")
+	html := r.Form.Get("editordata")
+
 	e.Title = title
+	e.HTML = html
 }
 
 func (s *site) blogPage(w http.ResponseWriter, r *http.Request) {

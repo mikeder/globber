@@ -30,7 +30,7 @@
           Blog
         </a>
         <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-          <a class="dropdown-item" href="/blog?page=0">New</a>
+          <a class="dropdown-item" href="/blog">Recent</a>
           <div class="dropdown-divider"></div>
           <a class="dropdown-item" href="/blog/archive">Archive</a>
         </div>
@@ -45,9 +45,7 @@
     <form class="form-inline my-2 my-lg-0">
       <script src="/static/js/auth.js"></script>
       {{if .Authenticated }}
-      <button class="btn btn-secondary my-2 my-sm-0" id="compose" type="button">
-        <a class="btn-link" href="/blog/compose">New Entry</a>
-      </button>
+      <a class="btn btn-secondary my-2 my-sm-0" href="/blog/compose">New Entry</a>
       <button class="btn btn-danger my-2 my-sm-0" onclick="removeJWT()" id="logout" type="button">
         Logout
       </button>
@@ -90,14 +88,14 @@
       </div>
       <div class="modal-body">
         <form id="login-form" class="login-form">
-          <label for="email">Email:</label><br />
-          <input type="text" id="email" name="email" /><br />
+          <label for="email">Email Address:</label><br />
+          <input type="text" id="email" name="email" placeholder="Enter email"/><br />
           <label for="password">Password:</label><br />
-          <input type="password" id="password" name="password" /><br />
+          <input type="password" id="password" name="password" placeholder="Password"/><br />
         </form>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-dismiss="modal">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal" onclick="location.reload()">
           Close
         </button>
         <button

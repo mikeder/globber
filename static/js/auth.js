@@ -15,6 +15,5 @@ var login = function() {
 
 var removeJWT = function() {
   document.cookie = 'jwt=; expires=Thu, 01 Jan 1970 00:00:01 GMT; path=/;';
-  location.replace("/")
-  location.reload();
+  location.replace("/blog");
 }
