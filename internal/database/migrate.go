@@ -67,6 +67,11 @@ func currentVersion(ctx context.Context, db *sql.DB) float32 {
 		return version
 	}
 
+	if row.Err() != nil {
+		log.Println(err)
+		return version
+	}
+
 	for row.Next() {
 		if err := row.Scan(&version); err != nil {
 			log.Println(err)

@@ -13,6 +13,8 @@ import (
 	"github.com/mikeder/globber/internal/database"
 )
 
+const envPrefix string = "admin"
+
 func main() {
 	if err := run(); err != nil {
 		log.SetOutput(os.Stderr)
@@ -30,7 +32,7 @@ func run() error {
 		DbName string `default:"blog" desc:"Database schema name."`
 	}{}
 
-	if err := envconfig.Process("myapp", &cfg); err != nil {
+	if err := envconfig.Process(envPrefix, &cfg); err != nil {
 		return err
 	}
 
@@ -40,7 +42,7 @@ func run() error {
 	flag.Parse()
 
 	if *helpFlag {
-		return envconfig.Usage("", &cfg)
+		return envconfig.Usage(envPrefix, &cfg)
 	}
 
 	// Set a database connection string, this needs improvement.
@@ -54,6 +56,7 @@ func run() error {
 
 	db, err := database.New(dbCFG)
 	if err != nil {
+		log.Print(err)
 		return err
 	}
 
@@ -63,6 +66,7 @@ func run() error {
 	if *migrate {
 		if err := database.Migrate(ctx, db); err != nil {
 			cancel()
+			log.Print(err)
 			return err
 		}
 	}

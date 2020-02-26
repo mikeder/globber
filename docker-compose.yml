@@ -25,6 +25,11 @@ services:
     build:
       context: .    
     command: "/bin/admin -migrate"
+    environment:
+      ADMIN_DBUSER: "bloguser"
+      ADMIN_DBPASS: "test"
+      ADMIN_DBHOST: "db"
+      ADMIN_DBNAME: "blog"
 
   site:
     depends_on:
@@ -38,11 +43,12 @@ services:
     restart: always
     command: "/bin/globber"
     environment:
-      DBUSER: bloguser
-      DBPASS: test
-      DBHOST: db:3306
-      DBNAME: blog
-      SITENAME: SqweebNet
+      GLOBBER_DBUSER: "bloguser"
+      GLOBBER_DBPASS: "test"
+      GLOBBER_DBHOST: "db"
+      GLOBBER_DBNAME: "blog"
+      GLOBBER_SITENAME: "SqweebNet"
+      GLOBBER_TOKENSECRET: "THISISNOTASECRET"
 
 volumes:
     db_data: {}
