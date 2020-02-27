@@ -45,6 +45,9 @@
     <form class="form-inline my-2 my-lg-0">
       <script src="/static/js/auth.js"></script>
       {{if .Authenticated }}
+      <span class="navbar-text" style="padding-right: 1rem;">
+        <b>Welcome, {{ .Username }}</b>
+      </span>
       <a class="btn btn-secondary my-2 my-sm-0" href="/blog/compose">New Entry</a>
       <button class="btn btn-danger my-2 my-sm-0" onclick="removeJWT()" id="logout" type="button">
         Logout
