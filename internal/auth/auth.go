@@ -3,7 +3,7 @@ package auth
 import (
 	"context"
 	"database/sql"
-	"strings"
+	"log"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
@@ -34,6 +34,23 @@ type Manager struct {
 // NewManager returns a new instance of an authentication Manager.
 func NewManager(userDB *sql.DB, secret string) *Manager {
 	return &Manager{jwtauth.New("HS256", []byte(secret), nil), userDB}
+}
+
+// ValidateCtx checks a context for a valid token and a username.
+func ValidateCtx(ctx context.Context) (bool, string) {
+	var user string
+
+	token, claims, err := jwtauth.FromContext(ctx)
+	if err != nil {
+		log.Print(errors.Wrap(err, "checking context for token and claims"))
+		return false, user
+	}
+
+	if name, ok := claims["name"]; ok {
+		user = name.(string)
+	}
+
+	return token.Valid, user
 }
 
 // PasswordLogin performs password authentication of a user.
@@ -80,8 +97,7 @@ func (m *Manager) AddUser(ctx context.Context, u *User) error {
 	}
 
 	// validate incoming auth token
-	_, claims, err := jwtauth.FromContext(ctx)
-	if caller, ok := claims["name"]; !ok || !strings.EqualFold(caller.(string), "superuser") {
+	if valid, username := ValidateCtx(ctx); !valid || username != "superuser" {
 		return errors.New("not authorized to add user")
 	}
 

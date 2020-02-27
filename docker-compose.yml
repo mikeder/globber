@@ -11,10 +11,10 @@ services:
     ports:
       - 3306:3306
     environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: blog
-      MYSQL_USER: bloguser
-      MYSQL_PASS: test
+      MYSQL_USER: "bloguser"
+      MYSQL_PASS: "test"
+      MYSQL_ROOT_PASSWORD: "root"
+      MYSQL_DATABASE: "blog"
 
   admin:
     depends_on:
@@ -26,8 +26,8 @@ services:
       context: .    
     command: "/bin/admin -migrate"
     environment:
-      ADMIN_DBUSER: "bloguser"
-      ADMIN_DBPASS: "test"
+      ADMIN_DBUSER: "root"
+      ADMIN_DBPASS: "root"
       ADMIN_DBHOST: "db"
       ADMIN_DBNAME: "blog"
 
@@ -43,8 +43,8 @@ services:
     restart: always
     command: "/bin/globber"
     environment:
-      GLOBBER_DBUSER: "bloguser"
-      GLOBBER_DBPASS: "test"
+      GLOBBER_DBUSER: "root"
+      GLOBBER_DBPASS: "root"
       GLOBBER_DBHOST: "db"
       GLOBBER_DBNAME: "blog"
       GLOBBER_SITENAME: "SqweebNet"

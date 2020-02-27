@@ -1,15 +1,14 @@
 package handlers
 
 import (
-	"context"
 	"database/sql"
 	"log"
 	"net/http"
 	"strconv"
 
 	"github.com/go-chi/chi"
-	"github.com/go-chi/jwtauth"
 	"github.com/gosimple/slug"
+	"github.com/mikeder/globber/internal/auth"
 	"github.com/mikeder/globber/internal/blog"
 	"github.com/mikeder/globber/internal/models"
 	"github.com/mikeder/globber/internal/web"
@@ -21,6 +20,7 @@ const maxMemory int64 = 1 * 1.049e+6 // 1MB
 type siteData struct {
 	Authenticated bool
 	SiteName      string
+	Username      string
 }
 
 type blogPageData struct {
@@ -33,25 +33,15 @@ type blogComposeData struct {
 	Entry *blog.Entry
 }
 
-func isAuthed(ctx context.Context) bool {
-	token, _, err := jwtauth.FromContext(ctx)
-	if err != nil {
-		log.Println(err)
-		return false
-	}
-	if token != nil && token.Valid {
-		return true
-	}
-	return false
-}
-
 func (s *site) blogArchive(w http.ResponseWriter, r *http.Request) {
 	entries, err := s.blogStore.GetArchive(r.Context())
 	if err != nil {
 		log.Println(errors.Wrap(err, "getting archive posts from database"))
 	}
 
-	sd := siteData{isAuthed(r.Context()), s.config.SiteName}
+	validTkn, username := auth.ValidateCtx(r.Context())
+
+	sd := siteData{validTkn, s.config.SiteName, username}
 	data := blogPageData{sd, entries}
 
 	s.loadTemplates()
@@ -73,7 +63,9 @@ func (s *site) blogEntry(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	sd := siteData{isAuthed(r.Context()), s.config.SiteName}
+	validTkn, username := auth.ValidateCtx(r.Context())
+
+	sd := siteData{validTkn, s.config.SiteName, username}
 	data := blogPageData{sd, []blog.Entry{entry}}
 
 	s.loadTemplates()
@@ -106,7 +98,9 @@ func (s *site) blogCompose(w http.ResponseWriter, r *http.Request) {
 		if err := s.blogStore.PostEntry(r.Context(), entry); err != nil {
 			log.Println(err)
 		}
-		sd := siteData{isAuthed(r.Context()), s.config.SiteName}
+
+		validTkn, username := auth.ValidateCtx(r.Context())
+		sd := siteData{validTkn, s.config.SiteName, username}
 		data := blogPageData{sd, []blog.Entry{*entry}}
 
 		s.loadTemplates()
@@ -114,7 +108,8 @@ func (s *site) blogCompose(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	sd := siteData{isAuthed(r.Context()), s.config.SiteName}
+	validTkn, username := auth.ValidateCtx(r.Context())
+	sd := siteData{validTkn, s.config.SiteName, username}
 	data := blogComposeData{sd, entry}
 
 	s.loadTemplates()
@@ -169,7 +164,8 @@ func (s *site) blogPage(w http.ResponseWriter, r *http.Request) {
 		log.Println(errors.Wrap(err, "getting posts from database"))
 	}
 
-	sd := siteData{isAuthed(r.Context()), s.config.SiteName}
+	validTkn, username := auth.ValidateCtx(r.Context())
+	sd := siteData{validTkn, s.config.SiteName, username}
 	data := blogPageData{sd, entries}
 
 	s.loadTemplates()
@@ -177,7 +173,8 @@ func (s *site) blogPage(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *site) root(w http.ResponseWriter, r *http.Request) {
-	sd := siteData{isAuthed(r.Context()), s.config.SiteName}
+	validTkn, username := auth.ValidateCtx(r.Context())
+	sd := siteData{validTkn, s.config.SiteName, username}
 
 	s.loadTemplates()
 	web.Render(w, s.templates.Lookup("home.html"), sd)
