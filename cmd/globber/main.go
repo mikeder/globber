@@ -14,6 +14,7 @@ import (
 	"github.com/mikeder/globber/internal/auth"
 	"github.com/mikeder/globber/internal/blog"
 	"github.com/mikeder/globber/internal/database"
+	"github.com/mikeder/globber/internal/minecraft"
 
 	_ "net/http/pprof"
 )
@@ -34,12 +35,14 @@ func run() error {
 	}()
 
 	cfg := struct {
-		DbUser      string `default:"root" desc:"Username for database connection."`
-		DbPass      string `default:"root" desc:"Password for database connection."`
-		DbHost      string `default:"db" desc:"Hostname for database connection."`
-		DbName      string `default:"blog" desc:"Database schema name."`
-		SiteName    string `default:"TestBlog" desc:"Name to be used for Title tags."`
-		TokenSecret string `default:"SUBERSECRETT" desc:"Secret string for generating auth tokens"`
+		DbUser        string `default:"root" desc:"Username for database connection."`
+		DbPass        string `default:"root" desc:"Password for database connection."`
+		DbHost        string `default:"db" desc:"Hostname for database connection."`
+		DbName        string `default:"blog" desc:"Database schema name."`
+		SiteName      string `default:"TestBlog" desc:"Name to be used for Title tags."`
+		TokenSecret   string `default:"SUBERSECRETT" desc:"Secret string for generating auth tokens"`
+		MinecraftHost string
+		MinecraftPort int `default:"25565"`
 	}{}
 
 	if err := envconfig.Process(envPrefix, &cfg); err != nil {
@@ -78,8 +81,10 @@ func run() error {
 
 	blogStore := blog.New(db)
 
+	minecraftServer := minecraft.NewServer(cfg.MinecraftHost, cfg.MinecraftPort)
+
 	handlerCFG := handlers.Config{SiteName: cfg.SiteName}
-	handler := handlers.New(authMan, blogStore, &handlerCFG)
+	handler := handlers.New(authMan, blogStore, &handlerCFG, minecraftServer)
 
 	server := &http.Server{
 		Addr:         ":3000",

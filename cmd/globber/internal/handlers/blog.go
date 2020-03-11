@@ -179,3 +179,11 @@ func (s *site) root(w http.ResponseWriter, r *http.Request) {
 	s.loadTemplates()
 	web.Render(w, s.templates.Lookup("home.html"), sd)
 }
+
+func (s *site) minecraft(w http.ResponseWriter, r *http.Request) {
+	validTkn, username := auth.ValidateCtx(r.Context())
+	sd := siteData{validTkn, s.config.SiteName, username}
+
+	s.loadTemplates()
+	web.Render(w, s.templates.Lookup("minecraft.html"), sd)
+}

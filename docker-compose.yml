@@ -2,11 +2,11 @@ version: '3.3'
 
 services:
   db:
-    logging:
-      driver: none
+    # logging:
+    #   driver: none
     image: mysql:5.7
-    volumes:
-      - db_data:/var/lib/mysql
+    # volumes:
+    #   - db_data:/var/lib/mysql
     restart: always
     ports:
       - 3306:3306
@@ -49,6 +49,7 @@ services:
       GLOBBER_DBNAME: "blog"
       GLOBBER_SITENAME: "SqweebNet"
       GLOBBER_TOKENSECRET: "THISISNOTASECRET"
+      GLOBBER_MINECRAFTHOST: "sqweeb.net"
 
 volumes:
     db_data: {}

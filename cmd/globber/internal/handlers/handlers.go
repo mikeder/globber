@@ -10,6 +10,7 @@ import (
 	"github.com/go-chi/jwtauth"
 	"github.com/mikeder/globber/internal/auth"
 	"github.com/mikeder/globber/internal/blog"
+	"github.com/mikeder/globber/internal/minecraft"
 )
 
 // Config contains contextual information for use within handlers.
@@ -19,13 +20,14 @@ type Config struct {
 
 // New returns an http.Handler with routes to support
 // the API for this application.
-func New(authMan *auth.Manager, bs *blog.Store, cfg *Config) http.Handler {
+func New(authMan *auth.Manager, bs *blog.Store, cfg *Config, mc *minecraft.Server) http.Handler {
 	adminAPI := adminAPI{authMan}
 	authAPI := authAPI{authMan}
 
 	site := site{
 		blogStore: bs,
 		config:    cfg,
+		mc:        mc,
 	}
 	site.loadTemplates()
 
@@ -52,6 +54,10 @@ func New(authMan *auth.Manager, bs *blog.Store, cfg *Config) http.Handler {
 		router.Get("/blog/entry/{slug}", site.blogEntry)
 
 		router.Get("/favicon.ico", faviconHandler)
+
+		router.Get("/minecraft", site.minecraft)
+		router.Get("/minecraft/ping", site.minecraftPing)
+		router.Get("/minecraft/status", site.minecraftStatus)
 
 		fs := http.FileServer(http.Dir("./static/"))
 		router.Get("/static/*", http.HandlerFunc(http.StripPrefix("/static/", fs).ServeHTTP))
@@ -87,4 +93,5 @@ type site struct {
 	blogStore *blog.Store
 	config    *Config
 	templates *template.Template
+	mc        *minecraft.Server
 }
