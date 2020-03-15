@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"net/http"
-	"time"
 
 	"github.com/mikeder/globber/internal/web"
 )
@@ -13,7 +12,7 @@ func (s *site) minecraftPing(w http.ResponseWriter, r *http.Request) {
 		web.Respond(w, struct{ error }{err}, http.StatusInternalServerError)
 	}
 	web.Respond(w, struct {
-		Latency time.Duration `json:"latency"`
+		Latency int64 `json:"latency_ms"`
 	}{s.mc.Latency}, http.StatusOK)
 }
 

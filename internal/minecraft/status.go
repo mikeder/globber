@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"net"
+	"strconv"
 	"strings"
 	"time"
 
@@ -12,13 +13,13 @@ import (
 
 // Server represents a Minecraft server.
 type Server struct {
-	Address        string        `json:"address"`
-	Online         bool          `json:"online"`
-	Version        string        `json:"version"`
-	MOTD           string        `json:"motd"`
-	CurrentPlayers string        `json:"current_players"`
-	MaxPlayers     string        `json:"max_players"`
-	Latency        time.Duration `json:"latency"`
+	Address        string `json:"address"`
+	Online         bool   `json:"online"`
+	Version        string `json:"version"`
+	MOTD           string `json:"motd"`
+	CurrentPlayers int    `json:"current_players"`
+	MaxPlayers     int    `json:"max_players"`
+	Latency        int64  `json:"latency_ms"`
 }
 
 // NewServer returns a server.
@@ -39,7 +40,7 @@ func (s *Server) Ping() error {
 	}
 	defer conn.Close()
 
-	s.Latency = time.Since(start).Round(time.Millisecond)
+	s.Latency = time.Since(start).Round(time.Millisecond).Milliseconds()
 	return nil
 }
 
@@ -51,7 +52,7 @@ func (s *Server) Status() error {
 		return errors.Wrap(err, "connecting to server")
 	}
 	defer conn.Close()
-	s.Latency = time.Since(start).Round(time.Millisecond)
+	s.Latency = time.Since(start).Round(time.Millisecond).Milliseconds()
 
 	_, err = conn.Write([]byte("\xFE\x01"))
 	if err != nil {
@@ -76,8 +77,8 @@ func (s *Server) Status() error {
 		s.Online = true
 		s.Version = replaceNulls(parsed[2])
 		s.MOTD = replaceNulls(parsed[3])
-		s.CurrentPlayers = replaceNulls(parsed[4])
-		s.MaxPlayers = replaceNulls(parsed[5])
+		s.CurrentPlayers = convertPlayerCount(parsed[4])
+		s.MaxPlayers = convertPlayerCount(parsed[5])
 	} else {
 		s.Online = false
 	}
@@ -87,4 +88,9 @@ func (s *Server) Status() error {
 
 func replaceNulls(b []byte) string {
 	return strings.ReplaceAll(string(b), "\u0000", "")
+}
+
+func convertPlayerCount(b []byte) int {
+	i, _ := strconv.Atoi(replaceNulls(b))
+	return i
 }
