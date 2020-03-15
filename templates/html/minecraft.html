@@ -1,45 +1,72 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-{{ template "part_head.html" . }}
-{{ template "part_nav.html" . }}
+{{ template "part_head.html" . }} {{ template "part_nav.html" . }}
 
-<body>
-
+<body onload="getStatus()">
     <div class="container" style="padding-top: 1rem;">
-        <img class="" src="https://minecraft-mp.com/banner-239994-5.png" alt="server deets">
-        
-        <div class="card" style="width: 18rem;">
-            <img class="card-img-top" src="/static/images/chicken-farm.png" alt="Minecraft Yo!">
-            <div class="card-body">
-                <h5 class="card-title">Minecraft Server Highlight</h5>
-                <p class="card-text">Chicken Chicken Farm by EustaceTheMonk</p>
-                <a href="http://sqweeb.net:4444/?worldname=world&mapname=surface&zoom=6&x=61&y=64&z=-185" target="new"
-                    class="btn btn-primary">See On Map</a>
+        <div class="jumbotron" id="mcstats">
+            <h1 id="servername"></h1>
+            <div class="alert alert-warning" role="alert" id="mcstatus">
+                Server Status: UNKNOWN
+            </div>
+            <hr class="my-4">
+            <div class="row">
+                <div class="col-sm-3">
+                    <p id="players"></p>
+                </div>
+                <div class="col-sm-3">
+                    <p id="address"></p>
+                </div>
+                <div class="col-sm-3">
+                    <p id="version"></p>
+                </div>
+                <div class="col-sm-3">
+                    <p id="latency"></p>
+                </div>
             </div>
         </div>
-        <div class="card" style="width: 18rem;">
-            <img class="card-img-top" src="/static/images/tree-tower.png" alt="Minecraft Yo!">
-            <div class="card-body">
-                <h5 class="card-title">Minecraft Server Highlight</h5>
-                <p class="card-text">
-                    Tree House Fort by cthierererererrr
-                </p><br>
-                <a href="http://sqweeb.net:4444/?worldname=world&mapname=surface&zoom=7&x=210&y=64&z=-63" target="_new"
-                    class="btn btn-primary">See On Map</a>
+
+        <div class="row">
+            <div class="col-sm-4">
+                <div class="card w-auto">
+                    <img class="card-img-top" src="/static/images/chicken-farm.png" />
+                    <div class="card-body">
+                        <h5 class="card-title">Minecraft Server Highlight</h5>
+                        <p class="card-text">Chicken Chicken Farm by EustaceTheMonk</p>
+                        <a href="http://sqweeb.net:4444/?worldname=world&mapname=surface&zoom=6&x=61&y=64&z=-185"
+                            target="new" class="btn btn-primary">See On Map</a>
+                    </div>
+                </div>
             </div>
-        </div>
-        <div class="card" style="width: 18rem;">
-            <img class="card-img-top" src="/static/images/town-center.png" alt="Minecraft Yo!">
-            <div class="card-body">
-                <h5 class="card-title">Minecraft Server Highlight</h5>
-                <p class="card-text">Town Center by multiple cool people</p><br>
-                <a href="http://sqweeb.net:4444/?worldname=world&mapname=surface&zoom=6&x=93&y=64&z=-93" target="_new"
-                    class="btn btn-primary">See On Map</a>
+            <div class="col-sm-4">
+                <div class="card w-auto">
+                    <img class="card-img-top" src="/static/images/tree-tower.png" />
+                    <div class="card-body">
+                        <h5 class="card-title">Minecraft Server Highlight</h5>
+                        <p class="card-text">
+                            Tree House Fort by cthierererererrr
+                        </p>
+                        <a href="http://sqweeb.net:4444/?worldname=world&mapname=surface&zoom=7&x=210&y=64&z=-63"
+                            target="_new" class="btn btn-primary">See On Map</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-4">
+                <div class="card w-auto">
+                    <img class="card-img-top" src="/static/images/town-center.png" />
+                    <div class="card-body">
+                        <h5 class="card-title">Minecraft Server Highlight</h5>
+                        <p class="card-text">Town Center by multiple cool people</p>
+                        <a href="http://sqweeb.net:4444/?worldname=world&mapname=surface&zoom=6&x=93&y=64&z=-93"
+                            target="_new" class="btn btn-primary">See On Map</a>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
-    {{ template "part_footer.html" }}
+        <script src="/static/js/minecraft.js"></script>
+        {{ template "part_footer.html" }}
 </body>
 
 </html>
