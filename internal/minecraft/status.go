@@ -3,6 +3,7 @@ package minecraft
 import (
 	"bytes"
 	"fmt"
+	"math"
 	"net"
 	"strconv"
 	"strings"
@@ -36,11 +37,12 @@ func (s *Server) Ping() error {
 	start := time.Now()
 	conn, err := net.DialTimeout("tcp", s.Address, time.Duration(3)*time.Second)
 	if err != nil {
+		s.Latency = math.MaxInt64
 		return errors.Wrap(err, "connecting to server")
 	}
 	defer conn.Close()
-
 	s.Latency = time.Since(start).Round(time.Millisecond).Milliseconds()
+
 	return nil
 }
 
@@ -49,7 +51,8 @@ func (s *Server) Status() error {
 	start := time.Now()
 	conn, err := net.DialTimeout("tcp", s.Address, time.Duration(3)*time.Second)
 	if err != nil {
-		return errors.Wrap(err, "connecting to server")
+		s.Online = false
+		return errors.Wrap(err, "connect to server")
 	}
 	defer conn.Close()
 	s.Latency = time.Since(start).Round(time.Millisecond).Milliseconds()
@@ -57,19 +60,19 @@ func (s *Server) Status() error {
 	_, err = conn.Write([]byte("\xFE\x01"))
 	if err != nil {
 		s.Online = false
-		return errors.Wrap(err, "writing to server connection")
+		return errors.Wrap(err, "write connection")
 	}
 
 	data := make([]byte, 512)
 	_, err = conn.Read(data)
 	if err != nil {
 		s.Online = false
-		return errors.Wrap(err, "reading from server connection")
+		return errors.Wrap(err, "read connection")
 	}
 
 	if data == nil || len(data) == 0 {
 		s.Online = false
-		return err
+		return nil
 	}
 
 	parsed := bytes.Split(data[:], []byte("\x00\x00\x00"))
