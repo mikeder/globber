@@ -49,14 +49,22 @@ func (a *authAPI) Login(w http.ResponseWriter, r *http.Request) {
 		Refresh: tokens.Refresh.Raw,
 	}
 
-	c := http.Cookie{
+	ac := http.Cookie{
 		Name:     "jwt",
 		Path:     "/",
 		Value:    tokens.Access.Raw,
 		SameSite: http.SameSiteDefaultMode,
 	}
 
-	http.SetCookie(w, &c)
+	rc := http.Cookie{
+		Name:     "jwt_refresh",
+		Path:     "/",
+		Value:    tokens.Refresh.Raw,
+		SameSite: http.SameSiteDefaultMode,
+	}
+
+	http.SetCookie(w, &ac)
+	http.SetCookie(w, &rc)
 
 	if err := web.Respond(w, resp, http.StatusOK); err != nil {
 		log.Println(err)
