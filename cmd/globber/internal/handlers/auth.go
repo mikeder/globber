@@ -21,7 +21,7 @@ func (a *authAPI) Login(w http.ResponseWriter, r *http.Request) {
 		decoder.Decode(&creds)
 	}
 
-	_, tokenString, err := a.manager.PasswordLogin(r.Context(), creds)
+	access, refresh, err := a.manager.PasswordLogin(r.Context(), creds)
 	if err != nil {
 		log.Println(err)
 		resp := struct {
@@ -42,15 +42,18 @@ func (a *authAPI) Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	resp := struct {
-		Token string `json:"token"`
+		Access  string `json:"access_token"`
+		Refresh string `json:"refresh_token"`
 	}{
-		Token: tokenString,
+		Access:  access.Raw,
+		Refresh: refresh.Raw,
 	}
 
 	c := http.Cookie{
-		Name:  "jwt",
-		Path:  "/",
-		Value: tokenString,
+		Name:     "jwt",
+		Path:     "/",
+		Value:    access.Raw,
+		SameSite: http.SameSiteDefaultMode,
 	}
 
 	http.SetCookie(w, &c)

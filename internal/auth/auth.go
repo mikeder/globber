@@ -4,19 +4,26 @@ import (
 	"context"
 	"database/sql"
 	"log"
+	"sync"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/go-chi/jwtauth"
+	"github.com/google/uuid"
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/bcrypt"
 
 	"github.com/mikeder/globber/internal/models"
 )
 
-// tokens are good for 30 minutes
-var tokenExp = 30 * time.Minute
-var tokenIss = "sqweeb.net"
+const (
+	accessTTL  = 15 * time.Minute
+	refreshTTL = 24 * time.Hour
+	tokenIss   = "sqweeb.net"
+)
+
+var tokenCache = map[string]struct{}{}
+var mu sync.Mutex
 
 // Claims holds our authorized claims and standard JWT claims.
 type Claims struct {
@@ -54,39 +61,57 @@ func ValidateCtx(ctx context.Context) (bool, string) {
 }
 
 // PasswordLogin performs password authentication of a user.
-func (m *Manager) PasswordLogin(ctx context.Context, c *Credentials) (*jwt.Token, string, error) {
+func (m *Manager) PasswordLogin(ctx context.Context, c *Credentials) (access, refresh *jwt.Token, err error) {
 	if c.Email == "" {
-		return nil, "", ErrUserMissingField{"email"}
+		return nil, nil, ErrUserMissingField{"email"}
 	}
 	if c.Password == "" {
-		return nil, "", ErrUserMissingField{"password"}
+		return nil, nil, ErrUserMissingField{"password"}
 	}
 
 	user, err := models.AuthorByEmail(ctx, m.userDB, c.Email)
 	if err != nil {
-		return nil, "", errors.Wrap(err, "getting user from database")
+		return nil, nil, errors.Wrap(err, "getting user from database")
 	}
 
 	valid := checkPasswordHash(c.Password, user.HashedPassword)
 	if !valid {
-		return nil, "", errors.New("password did not match")
+		return nil, nil, errors.New("password did not match")
 	}
 
 	// Create the JWT claims, which includes the username and expiry time
-	claims := &Claims{
+	now := time.Now()
+	accessClaims := &Claims{
 		Name:  user.Name,
 		Email: user.Email,
 		StandardClaims: jwt.StandardClaims{
 			Audience:  "globber",
-			ExpiresAt: time.Now().Add(tokenExp).Unix(),
+			ExpiresAt: now.Add(accessTTL).Unix(),
+			Id:        uuid.New().String(),
 			Issuer:    tokenIss,
-			IssuedAt:  time.Now().Unix(),
+			IssuedAt:  now.Unix(),
 		},
 	}
 
-	token, tokenString, err := m.TokenAuth.Encode(claims)
+	refreshClaims := &Claims{
+		StandardClaims: jwt.StandardClaims{
+			ExpiresAt: now.Add(accessTTL).Unix(),
+			Subject:   string(user.ID),
+			Id:        uuid.New().String(),
+			Issuer:    tokenIss,
+			IssuedAt:  now.Unix(),
+		},
+	}
 
-	return token, tokenString, err
+	access, _, err = m.TokenAuth.Encode(accessClaims)
+
+	refresh, _, err = m.TokenAuth.Encode(refreshClaims)
+
+	mu.Lock()
+	tokenCache[refreshClaims.Id] = struct{}{}
+	mu.Unlock()
+
+	return access, refresh, err
 }
 
 // AddUser adds a new User to the database.

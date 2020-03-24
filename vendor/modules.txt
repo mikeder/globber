@@ -7,6 +7,8 @@ github.com/go-chi/chi/middleware
 github.com/go-chi/jwtauth
 # github.com/go-sql-driver/mysql v1.5.0
 github.com/go-sql-driver/mysql
+# github.com/google/uuid v1.1.1
+github.com/google/uuid
 # github.com/gosimple/slug v1.9.0
 github.com/gosimple/slug
 # github.com/kelseyhightower/envconfig v1.4.0
