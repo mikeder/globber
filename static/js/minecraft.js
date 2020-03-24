@@ -3,7 +3,7 @@ var getStatus = function () {
     xhttp.onreadystatechange = function () {
         if (this.readyState == 4 && this.status == 200) {
             var status = JSON.parse(this.responseText);
-            updateStatus(status);
+            updateStatus(status.result);
         }
     };
     xhttp.open("GET", "/minecraft/status", true);
