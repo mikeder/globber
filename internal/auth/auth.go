@@ -61,57 +61,25 @@ func ValidateCtx(ctx context.Context) (bool, string) {
 }
 
 // PasswordLogin performs password authentication of a user.
-func (m *Manager) PasswordLogin(ctx context.Context, c *Credentials) (access, refresh *jwt.Token, err error) {
+func (m *Manager) PasswordLogin(ctx context.Context, c *Credentials) (tokens *Tokens, err error) {
 	if c.Email == "" {
-		return nil, nil, ErrUserMissingField{"email"}
+		return nil, ErrUserMissingField{"email"}
 	}
 	if c.Password == "" {
-		return nil, nil, ErrUserMissingField{"password"}
+		return nil, ErrUserMissingField{"password"}
 	}
 
 	user, err := models.AuthorByEmail(ctx, m.userDB, c.Email)
 	if err != nil {
-		return nil, nil, errors.Wrap(err, "getting user from database")
+		return nil, errors.Wrap(err, "getting user from database")
 	}
 
 	valid := checkPasswordHash(c.Password, user.HashedPassword)
 	if !valid {
-		return nil, nil, errors.New("password did not match")
+		return nil, errors.New("password did not match")
 	}
 
-	// Create the JWT claims, which includes the username and expiry time
-	now := time.Now()
-	accessClaims := &Claims{
-		Name:  user.Name,
-		Email: user.Email,
-		StandardClaims: jwt.StandardClaims{
-			Audience:  "globber",
-			ExpiresAt: now.Add(accessTTL).Unix(),
-			Id:        uuid.New().String(),
-			Issuer:    tokenIss,
-			IssuedAt:  now.Unix(),
-		},
-	}
-
-	refreshClaims := &Claims{
-		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: now.Add(accessTTL).Unix(),
-			Subject:   string(user.ID),
-			Id:        uuid.New().String(),
-			Issuer:    tokenIss,
-			IssuedAt:  now.Unix(),
-		},
-	}
-
-	access, _, err = m.TokenAuth.Encode(accessClaims)
-
-	refresh, _, err = m.TokenAuth.Encode(refreshClaims)
-
-	mu.Lock()
-	tokenCache[refreshClaims.Id] = struct{}{}
-	mu.Unlock()
-
-	return access, refresh, err
+	return m.newTokens(user)
 }
 
 // AddUser adds a new User to the database.
@@ -164,6 +132,55 @@ func (m *Manager) DebugToken() string {
 		},
 	})
 	return tokenString
+}
+
+// Tokens contains access and refresh JWT's.
+type Tokens struct {
+	Access  *jwt.Token `json:"access_token"`
+	Refresh *jwt.Token `json:"refresh_token"`
+}
+
+func (m *Manager) newTokens(u *models.Author) (*Tokens, error) {
+	now := time.Now()
+	accessClaims := &Claims{
+		Name:  u.Name,
+		Email: u.Email,
+		StandardClaims: jwt.StandardClaims{
+			Audience:  "globber",
+			ExpiresAt: now.Add(accessTTL).Unix(),
+			Id:        uuid.New().String(),
+			Issuer:    tokenIss,
+			IssuedAt:  now.Unix(),
+		},
+	}
+
+	refreshClaims := &Claims{
+		StandardClaims: jwt.StandardClaims{
+			ExpiresAt: now.Add(accessTTL).Unix(),
+			Subject:   string(u.ID),
+			Id:        uuid.New().String(),
+			Issuer:    tokenIss,
+			IssuedAt:  now.Unix(),
+		},
+	}
+
+	access, _, err := m.TokenAuth.Encode(accessClaims)
+	if err != nil {
+		return nil, err
+	}
+	refresh, _, err := m.TokenAuth.Encode(refreshClaims)
+	if err != nil {
+		return nil, err
+	}
+
+	mu.Lock()
+	tokenCache[refreshClaims.Id] = struct{}{}
+	mu.Unlock()
+
+	return &Tokens{
+		Access:  access,
+		Refresh: refresh,
+	}, nil
 }
 
 func hashPassword(password string) (string, error) {
