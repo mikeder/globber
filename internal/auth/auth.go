@@ -150,17 +150,15 @@ func (m *Manager) Refresh(ctx context.Context, t *Tokens) (*Tokens, error) {
 		claims = tokenClaims
 	}
 
-	suid := claims["sub"].(string)
-
-	// uid, err := strconv.ParseInt(suid, 10, 64)
-	// if err != nil {
-	// 	return nil, errors.Wrap(err, "bad subject")
-	// }
+	uid, ok := claims["sub"].([]byte)
+	if !ok {
+		return nil, errors.New("bad subject")
+	}
 
 	log.Print("perform further token validation")
 	log.Print(validToken.Valid)
 
-	user, err := models.AuthorByID(ctx, m.userDB, int([]byte(suid)[0]))
+	user, err := models.AuthorByID(ctx, m.userDB, int(uid[0]))
 	if err != nil {
 		return nil, errors.Wrap(err, "getting user from database")
 	}
@@ -170,27 +168,31 @@ func (m *Manager) Refresh(ctx context.Context, t *Tokens) (*Tokens, error) {
 
 // Tokens contains access and refresh JWT's.
 type Tokens struct {
-	Access  *jwt.Token `json:"access_token"`
-	Refresh *jwt.Token `json:"refresh_token"`
+	Access     *jwt.Token `json:"access_token"`
+	AccessTTL  time.Time  `json:"access_ttl"`
+	Refresh    *jwt.Token `json:"refresh_token"`
+	RefreshTTL time.Time  `json:"refresh_ttl"`
 }
 
 func (m *Manager) newTokens(u *models.Author) (*Tokens, error) {
 	now := time.Now()
+	accessExp := now.Add(accessTTL)
 	accessClaims := &Claims{
 		Name:  u.Name,
 		Email: u.Email,
 		StandardClaims: jwt.StandardClaims{
 			Audience:  "globber",
-			ExpiresAt: now.Add(accessTTL).Unix(),
+			ExpiresAt: accessExp.Unix(),
 			Id:        uuid.New().String(),
 			Issuer:    tokenIss,
 			IssuedAt:  now.Unix(),
 		},
 	}
 
+	refreshExp := now.Add(refreshTTL)
 	refreshClaims := &Claims{
 		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: now.Add(accessTTL).Unix(),
+			ExpiresAt: refreshExp.Unix(),
 			Subject:   string(u.ID),
 			Id:        uuid.New().String(),
 			Issuer:    tokenIss,
@@ -212,8 +214,10 @@ func (m *Manager) newTokens(u *models.Author) (*Tokens, error) {
 	mu.Unlock()
 
 	return &Tokens{
-		Access:  access,
-		Refresh: refresh,
+		Access:     access,
+		AccessTTL:  accessExp,
+		Refresh:    refresh,
+		RefreshTTL: refreshExp,
 	}, nil
 }
 

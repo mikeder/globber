@@ -14,12 +14,6 @@ var login = function () {
 }
 
 var refresh = function () {
-  var formData = new FormData();
-
-  var token = getCookie("jwt_refresh")
-  console.log("refreshing tokens: " + token)
-  formData.append("token", token)
-
   var xhttp = new XMLHttpRequest();
   xhttp.onreadystatechange = function () {
     if (this.readyState == 4 && this.status == 200) {
@@ -27,7 +21,7 @@ var refresh = function () {
     }
   };
   xhttp.open("POST", "/auth/refresh", true);
-  xhttp.send(formData);
+  xhttp.send();
 }
 
 var removeJWT = function () {

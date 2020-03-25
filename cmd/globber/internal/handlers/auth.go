@@ -84,8 +84,6 @@ func (a *authAPI) Refresh(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Print(refresh.Value)
-
 	tokens, err := a.manager.Refresh(r.Context(),
 		&auth.Tokens{
 			Refresh: &jwt.Token{
@@ -120,19 +118,7 @@ func (a *authAPI) Refresh(w http.ResponseWriter, r *http.Request) {
 		Refresh: tokens.Refresh.Raw,
 	}
 
-	ac := http.Cookie{
-		Name:     "jwt",
-		Path:     "/",
-		Value:    tokens.Access.Raw,
-		SameSite: http.SameSiteDefaultMode,
-	}
-
-	rc := http.Cookie{
-		Name:     "jwt_refresh",
-		Path:     "/",
-		Value:    tokens.Refresh.Raw,
-		SameSite: http.SameSiteDefaultMode,
-	}
+	ac, rc := newCookies(tokens)
 
 	http.SetCookie(w, &ac)
 	http.SetCookie(w, &rc)
@@ -141,4 +127,24 @@ func (a *authAPI) Refresh(w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 		return
 	}
+}
+
+func newCookies(t *auth.Tokens) (access, refresh http.Cookie) {
+	access = http.Cookie{
+		Name:     "jwt",
+		Path:     "/",
+		HttpOnly: true,
+		Expires:  t.AccessTTL,
+		Value:    t.Access.Raw,
+		SameSite: http.SameSiteDefaultMode,
+	}
+	refresh = http.Cookie{
+		Name:     "jwt_refresh",
+		Path:     "/",
+		HttpOnly: true,
+		Expires:  t.RefreshTTL,
+		Value:    t.Refresh.Raw,
+		SameSite: http.SameSiteDefaultMode,
+	}
+	return
 }
