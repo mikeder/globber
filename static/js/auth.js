@@ -56,4 +56,9 @@ function getCookie(cname) {
   return "";
 }
 
-setInterval(refresh, 30 * 1000);
+function min2Ms(min){
+  return min * 60000
+};
+
+refresh();
+setInterval(refresh, min2Ms(5));
