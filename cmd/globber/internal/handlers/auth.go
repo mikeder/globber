@@ -123,6 +123,13 @@ func (a *authAPI) Refresh(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func (a *authAPI) Tokens(w http.ResponseWriter, r *http.Request) {
+	if err := web.Respond(w, a.manager.ListTokens(r.Context()), http.StatusOK); err != nil {
+		log.Println(err)
+		return
+	}
+}
+
 func newCookies(t *auth.Tokens) (access, refresh http.Cookie) {
 	if t == nil {
 		return http.Cookie{Name: "jwt"}, http.Cookie{Name: "jwt_refresh"}

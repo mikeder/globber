@@ -70,6 +70,7 @@ func New(authMan *auth.Manager, bs *blog.Store, cfg *Config, mc *minecraft.Serve
 		// Handle valid / invalid tokens
 		r.Use(jwtauth.Authenticator)
 
+		r.Get("/admin/tokens", authAPI.Tokens)
 		r.Post("/admin/user/add", adminAPI.AddUser)
 
 		r.Get("/blog/compose", site.blogCompose)
