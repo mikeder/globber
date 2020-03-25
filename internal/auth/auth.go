@@ -150,18 +150,21 @@ func (m *Manager) Refresh(ctx context.Context, t *Tokens) (*Tokens, error) {
 		claims = tokenClaims
 	}
 
-	// check token cache for incoming token id
-	jti, ok := claims["id"].(string)
-	if !ok {
-		return nil, errors.Wrap(err, "bad jti")
-	}
+	log.Print("perform further token validation")
+	log.Print(validToken.Valid)
 
-	mu.Lock()
-	if _, ok := tokenCache[jti]; !ok {
-		mu.Unlock()
-		return nil, errors.New("unknown jti")
-	}
-	mu.Unlock()
+	// // check token cache for incoming token id
+	// jti, ok := claims["id"].(string)
+	// if !ok {
+	// 	return nil, errors.Wrap(err, "bad jti")
+	// }
+
+	// mu.Lock()
+	// if _, ok := tokenCache[jti]; !ok {
+	// 	mu.Unlock()
+	// 	return nil, errors.New("unknown jti")
+	// }
+	// mu.Unlock()
 
 	// TODO: reap the tokenCache of old id's
 
@@ -177,9 +180,6 @@ func (m *Manager) Refresh(ctx context.Context, t *Tokens) (*Tokens, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "getting user from database")
 	}
-
-	log.Print("perform further token validation")
-	log.Print(validToken.Valid)
 
 	return m.newTokens(user)
 }
