@@ -22,7 +22,7 @@ const (
 	tokenIss   = "sqweeb.net"
 )
 
-var tokenCache = map[string]struct{}{}
+var tokenCache = map[string]time.Time{}
 var mu sync.Mutex
 
 // Claims holds our authorized claims and standard JWT claims.
@@ -150,18 +150,36 @@ func (m *Manager) Refresh(ctx context.Context, t *Tokens) (*Tokens, error) {
 		claims = tokenClaims
 	}
 
-	uid, ok := claims["sub"].([]byte)
+	// check token cache for incoming token id
+	jti, ok := claims["id"].(string)
 	if !ok {
-		return nil, errors.New("bad subject")
+		return nil, errors.Wrap(err, "bad jti")
+	}
+
+	mu.Lock()
+	if _, ok := tokenCache[jti]; !ok {
+		mu.Unlock()
+		return nil, errors.New("unknown jti")
+	}
+	mu.Unlock()
+
+	// TODO: reap the tokenCache of old id's
+
+	suid, ok := claims["sub"].(string)
+	if !ok {
+		return nil, errors.Wrap(err, "bad subject")
+	}
+
+	// TODO: is this really necessary?
+	buid := []byte(suid)
+
+	user, err := models.AuthorByID(ctx, m.userDB, int(buid[0]))
+	if err != nil {
+		return nil, errors.Wrap(err, "getting user from database")
 	}
 
 	log.Print("perform further token validation")
 	log.Print(validToken.Valid)
-
-	user, err := models.AuthorByID(ctx, m.userDB, int(uid[0]))
-	if err != nil {
-		return nil, errors.Wrap(err, "getting user from database")
-	}
 
 	return m.newTokens(user)
 }
@@ -210,7 +228,7 @@ func (m *Manager) newTokens(u *models.Author) (*Tokens, error) {
 	}
 
 	mu.Lock()
-	tokenCache[refreshClaims.Id] = struct{}{}
+	tokenCache[refreshClaims.Id] = time.Now()
 	mu.Unlock()
 
 	return &Tokens{
