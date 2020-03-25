@@ -16,7 +16,9 @@ var login = function () {
 var refresh = function () {
   var formData = new FormData();
 
-  formData.append('token', getCookie("jwt_refresh"))
+  var token = getCookie("jwt_refresh")
+  console.log("refreshing tokens: " + token)
+  formData.append("token", token)
 
   var xhttp = new XMLHttpRequest();
   xhttp.onreadystatechange = function () {
