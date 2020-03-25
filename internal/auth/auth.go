@@ -153,11 +153,11 @@ func (m *Manager) Refresh(ctx context.Context, t *Tokens) (*Tokens, error) {
 	log.Print("perform further token validation")
 	log.Print(validToken.Valid)
 
-	// // check token cache for incoming token id
-	// jti, ok := claims["id"].(string)
-	// if !ok {
-	// 	return nil, errors.Wrap(err, "bad jti")
-	// }
+	// check token cache for incoming token id
+	_, ok := claims["id"].(string)
+	if !ok {
+		return nil, errors.Wrap(err, "bad jti")
+	}
 
 	// mu.Lock()
 	// if _, ok := tokenCache[jti]; !ok {
