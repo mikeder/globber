@@ -25,9 +25,14 @@ var refresh = function () {
 }
 
 var removeJWT = function () {
-  document.cookie = 'jwt=; expires=Thu, 01 Jan 1970 00:00:01 GMT; path=/;';
-  document.cookie = 'jwt_refresh=; expires=Thu, 01 Jan 1970 00:00:01 GMT; path=/;';
-  location.replace("/blog");
+  var xhttp = new XMLHttpRequest();
+  xhttp.onreadystatechange = function () {
+    if (this.readyState == 4 && this.status == 200) {
+      console.log("logout done")
+    }
+  };
+  xhttp.open("POST", "/auth/logout", true);
+  xhttp.send();
 }
 
 function getCookie(cname) {

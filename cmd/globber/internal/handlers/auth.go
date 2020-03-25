@@ -62,7 +62,13 @@ func (a *authAPI) Login(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *authAPI) Logout(w http.ResponseWriter, r *http.Request) {
-	return
+	ac, rc := newCookies(nil)
+	http.SetCookie(w, &ac)
+	http.SetCookie(w, &rc)
+	if err := web.Respond(w, nil, http.StatusOK); err != nil {
+		log.Println(err)
+		return
+	}
 }
 
 func (a *authAPI) Refresh(w http.ResponseWriter, r *http.Request) {
@@ -118,6 +124,9 @@ func (a *authAPI) Refresh(w http.ResponseWriter, r *http.Request) {
 }
 
 func newCookies(t *auth.Tokens) (access, refresh http.Cookie) {
+	if t == nil {
+		return http.Cookie{Name: "jwt"}, http.Cookie{Name: "jwt_refresh"}
+	}
 	access = http.Cookie{
 		Name:     "jwt",
 		Path:     "/",
