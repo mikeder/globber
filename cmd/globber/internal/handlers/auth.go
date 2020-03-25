@@ -75,3 +75,9 @@ func (a *authAPI) Login(w http.ResponseWriter, r *http.Request) {
 func (a *authAPI) Logout(w http.ResponseWriter, r *http.Request) {
 	return
 }
+
+func (a *authAPI) Refresh(w http.ResponseWriter, r *http.Request) {
+	r.ParseForm()
+	log.Print(r.Form.Get("tokens"))
+	return
+}

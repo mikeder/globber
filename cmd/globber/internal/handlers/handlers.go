@@ -47,6 +47,7 @@ func New(authMan *auth.Manager, bs *blog.Store, cfg *Config, mc *minecraft.Serve
 	router.Group(func(r chi.Router) {
 		// auth handlers
 		router.Post("/auth/login", authAPI.Login)
+		router.Post("/auth/refresh", authAPI.Refresh)
 
 		router.Get("/*", site.root)
 		router.Get("/blog", site.blogPage)
