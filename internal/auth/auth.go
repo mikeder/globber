@@ -155,7 +155,7 @@ func (m *Manager) Refresh(ctx context.Context, t *Tokens) (*Tokens, error) {
 
 	uid, err := strconv.ParseInt(suid, 10, 64)
 	if err != nil {
-		return nil, errors.New("bad subject")
+		return nil, errors.Wrap(err, "bad subject")
 	}
 
 	log.Print("perform further token validation")
