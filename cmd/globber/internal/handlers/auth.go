@@ -78,10 +78,12 @@ func (a *authAPI) Logout(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *authAPI) Refresh(w http.ResponseWriter, r *http.Request) {
-	err := r.ParseForm()
+	err := r.ParseMultipartForm(maxMemory)
 	if err != nil {
 		log.Print(err)
 	}
+
+	log.Print(r.Form)
 
 	raw := r.Form.Get("token")
 	log.Print(raw)
