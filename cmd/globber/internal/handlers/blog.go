@@ -36,7 +36,7 @@ type blogComposeData struct {
 func (s *site) blogArchive(w http.ResponseWriter, r *http.Request) {
 	entries, err := s.blogStore.GetArchive(r.Context())
 	if err != nil {
-		log.Println(errors.Wrap(err, "getting archive posts from database"))
+		log.Println(errors.Wrap(err, "get archive from database"))
 	}
 
 	validTkn, username := auth.ValidateCtx(r.Context())
@@ -79,12 +79,12 @@ func (s *site) blogCompose(w http.ResponseWriter, r *http.Request) {
 	if entryID != "" {
 		id, err := strconv.Atoi(entryID)
 		if err != nil {
-			log.Print(err)
+			log.Print(errors.Wrap(err, "parse entryID"))
 			return
 		}
 		entry, err = s.blogStore.GetEntryByID(r.Context(), int(id))
 		if err != nil && err != sql.ErrNoRows {
-			log.Print(err)
+			log.Print(errors.Wrap(err, "get entry from database"))
 			return
 		}
 	}
@@ -96,7 +96,7 @@ func (s *site) blogCompose(w http.ResponseWriter, r *http.Request) {
 			updateEntry(entry, r)
 		}
 		if err := s.blogStore.PostEntry(r.Context(), entry); err != nil {
-			log.Println(err)
+			log.Println(errors.Wrap(err, "post entry to database"))
 		}
 
 		validTkn, username := auth.ValidateCtx(r.Context())
@@ -119,7 +119,7 @@ func (s *site) blogCompose(w http.ResponseWriter, r *http.Request) {
 func newEntry(r *http.Request) *blog.Entry {
 	// load form data and pass to store
 	if err := r.ParseMultipartForm(maxMemory); err != nil {
-		log.Print(err)
+		log.Print(errors.Wrap(err, "parse form"))
 		return nil
 	}
 
@@ -152,16 +152,15 @@ func updateEntry(e *blog.Entry, r *http.Request) {
 }
 
 func (s *site) blogPage(w http.ResponseWriter, r *http.Request) {
-	page := r.URL.Query().Get("page")
-
-	pageNum, err := strconv.Atoi(page)
+	tmp := r.URL.Query().Get("page")
+	pageNum, err := strconv.Atoi(tmp)
 	if err != nil {
-		log.Println(err)
+		log.Println(errors.Wrap(err, "parse page number"))
 	}
 
 	entries, err := s.blogStore.GetEntriesByPage(r.Context(), pageNum)
 	if err != nil {
-		log.Println(errors.Wrap(err, "getting posts from database"))
+		log.Println(errors.Wrap(err, "get entries from database"))
 	}
 
 	validTkn, username := auth.ValidateCtx(r.Context())

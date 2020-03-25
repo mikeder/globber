@@ -193,16 +193,14 @@ func (m *Manager) Refresh(ctx context.Context, t *Tokens) (*Tokens, error) {
 // ListTokens returns the current token cache list.
 func (m *Manager) ListTokens(ctx context.Context) interface{} {
 	type ret struct {
-		Tokens []string `json:"tokens"`
+		Tokens map[string]time.Time `json:"tokens"`
 	}
 
-	var tmp []string
 	mu.Lock()
-	for token := range tokenCache {
-		tmp = append(tmp, token)
-	}
+	tokens := tokenCache
 	mu.Unlock()
-	return ret{Tokens: tmp}
+
+	return ret{tokens}
 }
 
 // Tokens contains access and refresh JWT's.
