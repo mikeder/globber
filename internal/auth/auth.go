@@ -60,28 +60,6 @@ func ValidateCtx(ctx context.Context) (bool, string) {
 	return token.Valid, user
 }
 
-// PasswordLogin performs password authentication of a user.
-func (m *Manager) PasswordLogin(ctx context.Context, c *Credentials) (tokens *Tokens, err error) {
-	if c.Email == "" {
-		return nil, ErrUserMissingField{"email"}
-	}
-	if c.Password == "" {
-		return nil, ErrUserMissingField{"password"}
-	}
-
-	user, err := models.AuthorByEmail(ctx, m.userDB, c.Email)
-	if err != nil {
-		return nil, errors.Wrap(err, "getting user from database")
-	}
-
-	valid := checkPasswordHash(c.Password, user.HashedPassword)
-	if !valid {
-		return nil, errors.New("password did not match")
-	}
-
-	return m.newTokens(user)
-}
-
 // AddUser adds a new User to the database.
 func (m *Manager) AddUser(ctx context.Context, u *User) error {
 	// validate incoming user fields
@@ -132,6 +110,57 @@ func (m *Manager) DebugToken() string {
 		},
 	})
 	return tokenString
+}
+
+// PasswordLogin performs password authentication of a user.
+func (m *Manager) PasswordLogin(ctx context.Context, c *Credentials) (tokens *Tokens, err error) {
+	if c.Email == "" {
+		return nil, ErrUserMissingField{"email"}
+	}
+	if c.Password == "" {
+		return nil, ErrUserMissingField{"password"}
+	}
+
+	user, err := models.AuthorByEmail(ctx, m.userDB, c.Email)
+	if err != nil {
+		return nil, errors.Wrap(err, "getting user from database")
+	}
+
+	valid := checkPasswordHash(c.Password, user.HashedPassword)
+	if !valid {
+		return nil, errors.New("password did not match")
+	}
+
+	return m.newTokens(user)
+}
+
+// Refresh performs a token check and issues new tokens if valid.
+func (m *Manager) Refresh(ctx context.Context, t *Tokens) (*Tokens, error) {
+	if t == nil {
+		return nil, errors.New("nil token given to refresh")
+	}
+
+	validToken, err := m.TokenAuth.Decode(t.Refresh.Raw)
+	if err != nil {
+		return nil, err
+	}
+
+	var claims jwt.MapClaims
+	if tokenClaims, ok := validToken.Claims.(jwt.MapClaims); ok {
+		claims = tokenClaims
+	}
+
+	uid := claims["sub"].(int)
+
+	log.Print("perform further token validation")
+	log.Print(validToken.Valid)
+
+	user, err := models.AuthorByID(ctx, m.userDB, uid)
+	if err != nil {
+		return nil, errors.Wrap(err, "getting user from database")
+	}
+
+	return m.newTokens(user)
 }
 
 // Tokens contains access and refresh JWT's.

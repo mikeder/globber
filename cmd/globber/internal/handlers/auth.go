@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/dgrijalva/jwt-go"
 	"github.com/mikeder/globber/internal/auth"
 	"github.com/mikeder/globber/internal/web"
 )
@@ -78,6 +79,62 @@ func (a *authAPI) Logout(w http.ResponseWriter, r *http.Request) {
 
 func (a *authAPI) Refresh(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
-	log.Print(r.Form.Get("token"))
-	return
+	raw := r.Form.Get("token")
+	log.Print(raw)
+
+	tokens, err := a.manager.Refresh(r.Context(),
+		&auth.Tokens{
+			Refresh: &jwt.Token{
+				Raw: raw,
+			},
+		})
+
+	if err != nil {
+		log.Println(err)
+		resp := struct {
+			Error  string `json:"error"`
+			Reason string `json:"reason,omitempty"`
+		}{
+			Error: "Forbidden",
+		}
+
+		if _, ok := err.(auth.ErrUserMissingField); ok {
+			resp.Reason = err.Error()
+		}
+
+		if err := web.Respond(w, resp, http.StatusForbidden); err != nil {
+			log.Println(err)
+		}
+		return
+	}
+
+	resp := struct {
+		Access  string `json:"access_token"`
+		Refresh string `json:"refresh_token"`
+	}{
+		Access:  tokens.Access.Raw,
+		Refresh: tokens.Refresh.Raw,
+	}
+
+	ac := http.Cookie{
+		Name:     "jwt",
+		Path:     "/",
+		Value:    tokens.Access.Raw,
+		SameSite: http.SameSiteDefaultMode,
+	}
+
+	rc := http.Cookie{
+		Name:     "jwt_refresh",
+		Path:     "/",
+		Value:    tokens.Refresh.Raw,
+		SameSite: http.SameSiteDefaultMode,
+	}
+
+	http.SetCookie(w, &ac)
+	http.SetCookie(w, &rc)
+
+	if err := web.Respond(w, resp, http.StatusOK); err != nil {
+		log.Println(err)
+		return
+	}
 }
