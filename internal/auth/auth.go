@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"log"
-	"strconv"
 	"sync"
 	"time"
 
@@ -153,15 +152,15 @@ func (m *Manager) Refresh(ctx context.Context, t *Tokens) (*Tokens, error) {
 
 	suid := claims["sub"].(string)
 
-	uid, err := strconv.ParseInt(suid, 10, 64)
-	if err != nil {
-		return nil, errors.Wrap(err, "bad subject")
-	}
+	// uid, err := strconv.ParseInt(suid, 10, 64)
+	// if err != nil {
+	// 	return nil, errors.Wrap(err, "bad subject")
+	// }
 
 	log.Print("perform further token validation")
 	log.Print(validToken.Valid)
 
-	user, err := models.AuthorByID(ctx, m.userDB, int(uid))
+	user, err := models.AuthorByID(ctx, m.userDB, int([]byte(suid)[0]))
 	if err != nil {
 		return nil, errors.Wrap(err, "getting user from database")
 	}
