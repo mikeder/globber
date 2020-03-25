@@ -25,7 +25,6 @@ var refresh = function () {
     }
   };
   xhttp.open("POST", "/auth/refresh", true);
-  xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
   xhttp.send(formData);
 }
 
