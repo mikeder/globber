@@ -154,26 +154,32 @@ func (m *Manager) Refresh(ctx context.Context, t *Tokens) (*Tokens, error) {
 	log.Print(validToken.Valid)
 
 	// check token cache for incoming token id
-	_, ok := claims["id"].(string)
+	tmp, ok := claims["jti"]
+	if !ok {
+		return nil, errors.New("bad jti")
+	}
+
+	jti, ok := tmp.(string)
 	if !ok {
 		return nil, errors.Wrap(err, "bad jti")
 	}
 
-	// mu.Lock()
-	// if _, ok := tokenCache[jti]; !ok {
-	// 	mu.Unlock()
-	// 	return nil, errors.New("unknown jti")
-	// }
-	// mu.Unlock()
+	mu.Lock()
+	if _, ok := tokenCache[jti]; !ok {
+		mu.Unlock()
+		return nil, errors.New("unknown jti")
+	}
+	mu.Unlock()
 
 	// TODO: reap the tokenCache of old id's
 
-	suid, ok := claims["sub"].(string)
+	tmp, ok = claims["sub"]
 	if !ok {
 		return nil, errors.Wrap(err, "bad subject")
 	}
 
 	// TODO: is this really necessary?
+	suid, ok := tmp.(string)
 	buid := []byte(suid)
 
 	user, err := models.AuthorByID(ctx, m.userDB, int(buid[0]))
