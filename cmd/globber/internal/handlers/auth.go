@@ -50,19 +50,7 @@ func (a *authAPI) Login(w http.ResponseWriter, r *http.Request) {
 		Refresh: tokens.Refresh.Raw,
 	}
 
-	ac := http.Cookie{
-		Name:     "jwt",
-		Path:     "/",
-		Value:    tokens.Access.Raw,
-		SameSite: http.SameSiteDefaultMode,
-	}
-
-	rc := http.Cookie{
-		Name:     "jwt_refresh",
-		Path:     "/",
-		Value:    tokens.Refresh.Raw,
-		SameSite: http.SameSiteDefaultMode,
-	}
+	ac, rc := newCookies(tokens)
 
 	http.SetCookie(w, &ac)
 	http.SetCookie(w, &rc)
