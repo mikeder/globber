@@ -18,7 +18,7 @@ var refresh = function () {
 
   var token = getCookie("jwt_refresh")
   console.log("refreshing tokens: " + token)
-  formData.append("token", token)
+  formData.append("token", token.value)
 
   var xhttp = new XMLHttpRequest();
   xhttp.onreadystatechange = function () {
