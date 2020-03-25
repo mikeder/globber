@@ -78,20 +78,18 @@ func (a *authAPI) Logout(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *authAPI) Refresh(w http.ResponseWriter, r *http.Request) {
-	err := r.ParseMultipartForm(maxMemory)
+	refresh, err := r.Cookie("jwt_refresh")
 	if err != nil {
 		log.Print(err)
+		return
 	}
 
-	log.Print(r.Form)
-
-	raw := r.Form.Get("token")
-	log.Print(raw)
+	log.Print(refresh.Value)
 
 	tokens, err := a.manager.Refresh(r.Context(),
 		&auth.Tokens{
 			Refresh: &jwt.Token{
-				Raw: raw,
+				Raw: refresh.Value,
 			},
 		})
 
