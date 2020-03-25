@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/mikeder/globber/internal/auth"
@@ -132,7 +133,16 @@ func (a *authAPI) Tokens(w http.ResponseWriter, r *http.Request) {
 
 func newCookies(t *auth.Tokens) (access, refresh http.Cookie) {
 	if t == nil {
-		return http.Cookie{Name: "jwt"}, http.Cookie{Name: "jwt_refresh"}
+		return http.Cookie{
+				Name:    "jwt",
+				Path:    "/",
+				Expires: time.Time{},
+			},
+			http.Cookie{
+				Name:    "jwt_refresh",
+				Path:    "/",
+				Expires: time.Time{},
+			}
 	}
 	access = http.Cookie{
 		Name:     "jwt",

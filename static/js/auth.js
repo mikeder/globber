@@ -29,10 +29,15 @@ var removeJWT = function () {
   xhttp.onreadystatechange = function () {
     if (this.readyState == 4 && this.status == 200) {
       console.log("logout done")
+    } else {
+      document.cookie = 'jwt=; expires=Thu, 01 Jan 1970 00:00:01 GMT; path=/;';
+      document.cookie = 'jwt_refresh=; expires=Thu, 01 Jan 1970 00:00:01 GMT; path=/;';
     }
   };
   xhttp.open("POST", "/auth/logout", true);
   xhttp.send();
+  
+  location.replace("/blog");
 }
 
 function getCookie(cname) {
