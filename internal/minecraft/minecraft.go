@@ -43,6 +43,9 @@ func NewServer(addr string, port int, db *sql.DB) *Server {
 		Port:     port,
 		playerDB: db,
 	}
+
+	go srv.periodicUpdate()
+
 	return srv
 }
 
@@ -86,6 +89,17 @@ func (s *Server) PingList() error {
 	go s.updatePlayerTable(s.OnlinePlayers)
 
 	return nil
+}
+
+func (s *Server) periodicUpdate() {
+	ticker := time.NewTicker(1 * time.Minute)
+
+	for range ticker.C {
+		err := s.PingList()
+		if err != nil {
+			log.Println(errors.Wrap(err, "periodic update"))
+		}
+	}
 }
 
 func (s *Server) updatePlayerTable(players []Player) {
