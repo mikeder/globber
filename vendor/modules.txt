@@ -1,3 +1,15 @@
+# github.com/Tnze/go-mc v1.15.1
+github.com/Tnze/go-mc/bot
+github.com/Tnze/go-mc/bot/world
+github.com/Tnze/go-mc/bot/world/entity
+github.com/Tnze/go-mc/bot/world/entity/player
+github.com/Tnze/go-mc/chat
+github.com/Tnze/go-mc/data
+github.com/Tnze/go-mc/data/lang/en-us
+github.com/Tnze/go-mc/nbt
+github.com/Tnze/go-mc/net
+github.com/Tnze/go-mc/net/CFB8
+github.com/Tnze/go-mc/net/packet
 # github.com/dgrijalva/jwt-go v3.2.0+incompatible
 github.com/dgrijalva/jwt-go
 # github.com/go-chi/chi v4.0.3+incompatible

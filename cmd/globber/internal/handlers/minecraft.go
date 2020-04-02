@@ -18,7 +18,7 @@ func (s *site) minecraftPing(w http.ResponseWriter, r *http.Request) {
 	resp := Response{
 		Status: "ok",
 	}
-	err := s.mc.Ping()
+	err := s.mc.PingList()
 	if err != nil {
 		log.Printf("error: %v\n", err)
 		resp.Status = "error"
@@ -32,7 +32,7 @@ func (s *site) minecraftStatus(w http.ResponseWriter, r *http.Request) {
 	resp := Response{
 		Status: "ok",
 	}
-	err := s.mc.Status()
+	err := s.mc.PingList()
 	if err != nil {
 		log.Printf("error: %v\n", err)
 		resp.Status = "error"
