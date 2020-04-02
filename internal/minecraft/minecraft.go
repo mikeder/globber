@@ -3,7 +3,6 @@ package minecraft
 import (
 	"database/sql"
 	"encoding/json"
-	"fmt"
 	"log"
 	"time"
 
@@ -83,7 +82,7 @@ func (s *Server) PingList() error {
 	s.Online = true
 	s.CurrentPlayers = stat.Players.Online
 	s.MaxPlayers = stat.Players.Max
-	s.Latency = fmt.Sprintf("%.1v", delay)
+	s.Latency = delay.Truncate(time.Millisecond).String()
 	s.OnlinePlayers = stat.Players.Sample
 	s.Version = stat.Version.Name
 	s.Protocol = stat.Version.Protocol
