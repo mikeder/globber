@@ -39,8 +39,9 @@ type Player struct {
 // NewServer returns a server.
 func NewServer(addr string, port int, db *sql.DB) *Server {
 	srv := &Server{
-		Address: addr,
-		Port:    port,
+		Address:  addr,
+		Port:     port,
+		playerDB: db,
 	}
 	return srv
 }
