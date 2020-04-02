@@ -26,7 +26,7 @@ type Server struct {
 	Address        string   `json:"address"`
 	Version        string   `json:"version"`
 	MOTD           string   `json:"motd"`
-	Latency        string   `json:"latency_ms"`
+	Latency        string   `json:"latency"`
 	OnlinePlayers  []Player `json:"online_players"`
 
 	playerDB *sql.DB
@@ -83,7 +83,7 @@ func (s *Server) PingList() error {
 	s.Online = true
 	s.CurrentPlayers = stat.Players.Online
 	s.MaxPlayers = stat.Players.Max
-	s.Latency = fmt.Sprintf("%v", delay)
+	s.Latency = fmt.Sprintf("%v", delay.Round(time.Microsecond))
 	s.OnlinePlayers = stat.Players.Sample
 	s.Version = stat.Version.Name
 	s.Protocol = stat.Version.Protocol

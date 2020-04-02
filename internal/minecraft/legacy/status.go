@@ -20,7 +20,7 @@ type Server struct {
 	MOTD           string `json:"motd"`
 	CurrentPlayers int    `json:"current_players"`
 	MaxPlayers     int    `json:"max_players"`
-	Latency        int64  `json:"latency_ms"`
+	Latency        int64  `json:"latency"`
 }
 
 // NewServer returns a server.

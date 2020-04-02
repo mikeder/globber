@@ -30,7 +30,7 @@ var updateStatus = function (server) {
     document.getElementById("servername").innerHTML = server.motd;
     document.getElementById("address").innerHTML = "<b>Address:</b> " + server.address;
     document.getElementById("players").innerHTML = "<b>Players:</b> " + server.current_players + "/" + server.max_players;
-    document.getElementById("latency").innerHTML = "<b>Latency:</b> " + server.latency_ms + "ms";
+    document.getElementById("latency").innerHTML = "<b>Latency:</b> " + server.latency;
     document.getElementById("version").innerHTML = "<b>Version:</b> " + server.version;
 }
 
