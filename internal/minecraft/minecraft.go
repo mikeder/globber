@@ -83,7 +83,7 @@ func (s *Server) PingList() error {
 	s.Online = true
 	s.CurrentPlayers = stat.Players.Online
 	s.MaxPlayers = stat.Players.Max
-	s.Latency = fmt.Sprintf("%v", delay.Round(time.Microsecond))
+	s.Latency = fmt.Sprintf("%v", delay.Round(time.Millisecond))
 	s.OnlinePlayers = stat.Players.Sample
 	s.Version = stat.Version.Name
 	s.Protocol = stat.Version.Protocol
