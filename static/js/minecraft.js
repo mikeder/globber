@@ -32,5 +32,17 @@ var updateStatus = function (server) {
     document.getElementById("players").innerHTML = "<b>Players:</b> " + server.current_players + "/" + server.max_players;
     document.getElementById("latency").innerHTML = "<b>Latency:</b> " + server.latency;
     document.getElementById("version").innerHTML = "<b>Version:</b> " + server.version;
+
+    updatePlayers(server.online_players)
 }
 
+var updatePlayers = function (players) {
+    var player_list = document.getElementById("players_list")
+    player_list.innerHTML = ""
+
+    players.forEach(player => {
+        var entry = document.createElement('li');
+        entry.appendChild(document.createTextNode(player.name));
+        player_list.appendChild(entry);
+    });
+}
