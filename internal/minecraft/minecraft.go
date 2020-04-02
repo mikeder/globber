@@ -3,6 +3,7 @@ package minecraft
 import (
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"log"
 	"time"
 
@@ -17,20 +18,21 @@ import (
 
 // Server represents a Minecraft server.
 type Server struct {
-	Address        string   `json:"address"`
-	Port           int      `json:"port"`
 	Online         bool     `json:"online"`
-	Version        string   `json:"version"`
+	Port           int      `json:"port"`
 	Protocol       int      `json:"protocol"`
-	MOTD           string   `json:"motd"`
 	CurrentPlayers int      `json:"current_players"`
 	MaxPlayers     int      `json:"max_players"`
+	Address        string   `json:"address"`
+	Version        string   `json:"version"`
+	MOTD           string   `json:"motd"`
+	Latency        string   `json:"latency_ms"`
 	OnlinePlayers  []Player `json:"online_players"`
-	Latency        int64    `json:"latency_ms"`
 
 	playerDB *sql.DB
 }
 
+// Player represents a player on the server.
 type Player struct {
 	ID   uuid.UUID `json:"id"`
 	Name string    `json:"name"`
@@ -81,7 +83,7 @@ func (s *Server) PingList() error {
 	s.Online = true
 	s.CurrentPlayers = stat.Players.Online
 	s.MaxPlayers = stat.Players.Max
-	s.Latency = delay.Milliseconds()
+	s.Latency = fmt.Sprintf("%v", delay)
 	s.OnlinePlayers = stat.Players.Sample
 	s.Version = stat.Version.Name
 	s.Protocol = stat.Version.Protocol

@@ -41,7 +41,7 @@ func (s *Server) Ping() error {
 		return errors.Wrap(err, "connecting to server")
 	}
 	defer conn.Close()
-	s.Latency = time.Since(start).Round(time.Millisecond).Milliseconds()
+	s.Latency = time.Since(start).Round(time.Millisecond).Nanoseconds()
 
 	return nil
 }
@@ -55,7 +55,7 @@ func (s *Server) Status() error {
 		return errors.Wrap(err, "connect to server")
 	}
 	defer conn.Close()
-	s.Latency = time.Since(start).Round(time.Millisecond).Milliseconds()
+	s.Latency = time.Since(start).Round(time.Millisecond).Nanoseconds()
 
 	_, err = conn.Write([]byte("\xFE\x01"))
 	if err != nil {
