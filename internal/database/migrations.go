@@ -48,4 +48,17 @@ var Migrations = []Migration{
 			ADD highlight int(8)`,
 		version: 0.4,
 	},
+	Migration{
+		author: "mikeder",
+		query: `CREATE TABLE players 
+			id int(11) NOT NULL AUTO_INCREMENT,
+			name varchar(100) NOT NULL,
+			uuid varchar(100) NOT NULL,
+			first_seen datetime NOT NULL,
+			last_seen timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, 
+			PRIMARY KEY (id),
+			UNIQUE KEY uuid (uuid)
+		) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8`,
+		version: 0.5,
+	},
 }

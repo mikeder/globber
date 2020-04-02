@@ -2,6 +2,7 @@ package minecraft
 
 import (
 	"encoding/json"
+	"time"
 
 	"github.com/Tnze/go-mc/bot"
 	"github.com/Tnze/go-mc/chat"
@@ -12,16 +13,16 @@ import (
 
 // Server represents a Minecraft server.
 type Server struct {
-	Address        string   `json:"address"`
-	Port           int      `json:"port"`
-	Online         bool     `json:"online"`
-	Version        string   `json:"version"`
-	Protocol       int      `json:"protocol"`
-	MOTD           string   `json:"motd"`
-	CurrentPlayers int      `json:"current_players"`
-	MaxPlayers     int      `json:"max_players"`
-	OnlinePlayers  []Player `json:"online_players"`
-	Latency        int64    `json:"latency_ms"`
+	Address        string        `json:"address"`
+	Port           int           `json:"port"`
+	Online         bool          `json:"online"`
+	Version        string        `json:"version"`
+	Protocol       int           `json:"protocol"`
+	MOTD           string        `json:"motd"`
+	CurrentPlayers int           `json:"current_players"`
+	MaxPlayers     int           `json:"max_players"`
+	OnlinePlayers  []Player      `json:"online_players"`
+	Latency        time.Duration `json:"latency"`
 }
 
 type Player struct {
@@ -69,8 +70,10 @@ func (s *Server) PingList() error {
 	s.MOTD = stat.Description.String()
 	s.CurrentPlayers = stat.Players.Online
 	s.MaxPlayers = stat.Players.Max
-	s.Latency = delay.Milliseconds()
+	s.Latency = delay
 	s.OnlinePlayers = stat.Players.Sample
+	s.Version = stat.Version.Name
+	s.Protocol = stat.Version.Protocol
 
 	return nil
 }
