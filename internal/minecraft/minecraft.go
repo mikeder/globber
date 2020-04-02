@@ -91,6 +91,11 @@ func (s *Server) PingList() error {
 	return nil
 }
 
+// Players returns all past and present players.
+func (s *Server) Players(ctx context.Context) ([]*models.Player, error) {
+	return models.AllPlayers(ctx, s.playerDB)
+}
+
 func (s *Server) periodicUpdate() {
 	ticker := time.NewTicker(1 * time.Minute)
 

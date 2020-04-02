@@ -59,6 +59,7 @@ func New(authMan *auth.Manager, bs *blog.Store, cfg *Config, mc *minecraft.Serve
 
 		router.Get("/minecraft", site.minecraft)
 		router.Get("/minecraft/ping", site.minecraftPing)
+		router.Get("/minecraft/players", site.minecraftPlayers)
 		router.Get("/minecraft/status", site.minecraftStatus)
 
 		fs := http.FileServer(http.Dir("./static/"))

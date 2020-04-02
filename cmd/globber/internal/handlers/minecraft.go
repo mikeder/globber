@@ -41,3 +41,18 @@ func (s *site) minecraftStatus(w http.ResponseWriter, r *http.Request) {
 	resp.Result = *s.mc
 	web.Respond(w, resp, http.StatusOK)
 }
+
+func (s *site) minecraftPlayers(w http.ResponseWriter, r *http.Request) {
+	resp := Response{
+		Status: "ok",
+	}
+	players, err := s.mc.Players(r.Context())
+	if err != nil {
+		log.Printf("error: %v\n", err)
+		resp.Status = "error"
+		resp.Reason = err.Error()
+	}
+
+	resp.Result = players
+	web.Respond(w, resp, http.StatusOK)
+}
