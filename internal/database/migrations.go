@@ -50,7 +50,7 @@ var Migrations = []Migration{
 	},
 	Migration{
 		author: "mikeder",
-		query: `CREATE TABLE players 
+		query: `CREATE TABLE IF NOT EXISTS players (
 			id int(11) NOT NULL AUTO_INCREMENT,
 			name varchar(100) NOT NULL,
 			uuid varchar(100) NOT NULL,
