@@ -1,14 +1,18 @@
 package minecraft
 
 import (
+	"database/sql"
 	"encoding/json"
+	"log"
 	"time"
 
 	"github.com/Tnze/go-mc/bot"
 	"github.com/Tnze/go-mc/chat"
 	_ "github.com/Tnze/go-mc/data/lang/en-us"
 	"github.com/google/uuid"
+	"github.com/mikeder/globber/internal/models"
 	"github.com/pkg/errors"
+	"golang.org/x/net/context"
 )
 
 // Server represents a Minecraft server.
@@ -23,6 +27,8 @@ type Server struct {
 	MaxPlayers     int           `json:"max_players"`
 	OnlinePlayers  []Player      `json:"online_players"`
 	Latency        time.Duration `json:"latency"`
+
+	playerDB *sql.DB
 }
 
 type Player struct {
@@ -31,7 +37,7 @@ type Player struct {
 }
 
 // NewServer returns a server.
-func NewServer(addr string, port int) *Server {
+func NewServer(addr string, port int, db *sql.DB) *Server {
 	srv := &Server{
 		Address: addr,
 		Port:    port,
@@ -75,5 +81,36 @@ func (s *Server) PingList() error {
 	s.Version = stat.Version.Name
 	s.Protocol = stat.Version.Protocol
 
+	go s.updatePlayerTable(s.OnlinePlayers)
+
 	return nil
+}
+
+func (s *Server) updatePlayerTable(players []Player) {
+	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(time.Second*10))
+	defer cancel()
+	for _, online := range players {
+		existing, err := models.PlayerByUUID(ctx, s.playerDB, online.ID.String())
+		if err != nil && err != sql.ErrNoRows {
+			continue
+		}
+		if existing == nil {
+			newPlayer := models.Player{
+				Name:      online.Name,
+				UUID:      online.ID.String(),
+				FirstSeen: time.Now(),
+				LastSeen:  time.Now(),
+			}
+			err := newPlayer.Save(ctx, s.playerDB)
+			if err != nil {
+				log.Println(errors.Wrap(err, "add new player"))
+			}
+		} else {
+			existing.LastSeen = time.Now()
+			err := existing.Save(ctx, s.playerDB)
+			if err != nil {
+				log.Println(errors.Wrap(err, "update existing player"))
+			}
+		}
+	}
 }

@@ -81,7 +81,7 @@ func run() error {
 
 	blogStore := blog.New(db)
 
-	minecraftServer := minecraft.NewServer(cfg.MinecraftHost, cfg.MinecraftPort)
+	minecraftServer := minecraft.NewServer(cfg.MinecraftHost, cfg.MinecraftPort, db)
 
 	handlerCFG := handlers.Config{SiteName: cfg.SiteName}
 	handler := handlers.New(authMan, blogStore, &handlerCFG, minecraftServer)
