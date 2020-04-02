@@ -17,16 +17,16 @@ import (
 
 // Server represents a Minecraft server.
 type Server struct {
-	Address        string        `json:"address"`
-	Port           int           `json:"port"`
-	Online         bool          `json:"online"`
-	Version        string        `json:"version"`
-	Protocol       int           `json:"protocol"`
-	MOTD           string        `json:"motd"`
-	CurrentPlayers int           `json:"current_players"`
-	MaxPlayers     int           `json:"max_players"`
-	OnlinePlayers  []Player      `json:"online_players"`
-	Latency        time.Duration `json:"latency"`
+	Address        string   `json:"address"`
+	Port           int      `json:"port"`
+	Online         bool     `json:"online"`
+	Version        string   `json:"version"`
+	Protocol       int      `json:"protocol"`
+	MOTD           string   `json:"motd"`
+	CurrentPlayers int      `json:"current_players"`
+	MaxPlayers     int      `json:"max_players"`
+	OnlinePlayers  []Player `json:"online_players"`
+	Latency        int64    `json:"latency_ms"`
 
 	playerDB *sql.DB
 }
@@ -75,9 +75,10 @@ func (s *Server) PingList() error {
 	}
 
 	s.MOTD = stat.Description.String()
+	s.Online = true
 	s.CurrentPlayers = stat.Players.Online
 	s.MaxPlayers = stat.Players.Max
-	s.Latency = delay
+	s.Latency = delay.Milliseconds()
 	s.OnlinePlayers = stat.Players.Sample
 	s.Version = stat.Version.Name
 	s.Protocol = stat.Version.Protocol
