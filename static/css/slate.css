@@ -461,6 +461,13 @@ mark, .mark {
     height: auto;
 }
 
+.thumbnail img {
+    height: 64px;
+    width: 64px;
+    display: block;
+    padding-bottom: 4px;
+}
+
 .figure {
     display: inline-block;
 }
