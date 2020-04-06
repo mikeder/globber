@@ -1,0 +1,121 @@
+[01:56:32] [Server thread/INFO]: <xopeanut> can i enchant my pickaxe now?
+[01:56:34] [Server thread/INFO]: <d0gg> you have to find clay
+[01:56:37] [Server thread/INFO]: <xopeanut> i have 31
+[01:56:41] [Server thread/INFO]: <d0gg> come
+[01:56:53] [Server thread/INFO]: <d0gg> actually sleep first
+[01:57:41] [Server thread/INFO]: <xopeanut> should i get diamonds?
+[01:57:45] [Server thread/INFO]: <d0gg> oh
+[01:57:49] [Server thread/INFO]: <d0gg> are you making a new pick?
+[01:57:56] [Server thread/INFO]: <xopeanut> yaaah
+[01:58:07] [Server thread/INFO]: <d0gg> thief
+[01:58:09] [Server thread/INFO]: xopeanut has made the advancement [Diamonds!]
+[01:58:53] [Server thread/INFO]: <d0gg> oh shit
+[01:58:56] [Server thread/INFO]: <xopeanut> wut
+[01:59:01] [Server thread/INFO]: <d0gg> quick
+[01:59:16] [Server thread/INFO]: <d0gg> ill defend
+[01:59:20] [Server thread/INFO]: <xopeanut> lol
+[01:59:30] [Server thread/INFO]: <d0gg> up stairs
+[01:59:31] [Server thread/INFO]: <xopeanut> ill watch
+[02:00:04] [Server thread/INFO]: <xopeanut> aw i cant see anything
+[02:00:27] [Server thread/INFO]: <d0gg> I just dont want them killing his villagers
+[02:00:49] [Server thread/INFO]: <xopeanut> oh, i thought you were worried about my safety..
+[02:00:53] [Server thread/INFO]: <d0gg> that too
+[02:00:58] [Server thread/INFO]: <xopeanut> -__-;
+[02:01:09] [Server thread/INFO]: <xopeanut> get him
+[02:01:26] [Server thread/INFO]: <xopeanut> danngg all them arrows
+[02:01:27] [Server thread/INFO]: <d0gg> my sword broke !!!
+[02:02:11] [Server thread/INFO]: <xopeanut> no swords in here
+[02:03:02] [Server thread/INFO]: d0gg was slain by Vindicator
+[02:03:13] [Server thread/INFO]: <xopeanut> what do i dooo
+[02:03:17] [Server thread/INFO]: <d0gg> dont let them in
+[02:04:23] [Server thread/INFO]: xopeanut was slain by Vindicator
+[02:04:34] [Server thread/INFO]: Villager axw['Librarian'/257511, l='world', x=-6.49, y=69.00, z=-331.49] died, message: 'Librarian was slain by Vindicator'
+[02:04:43] [Server thread/INFO]: Villager axw['Librarian'/184822, l='world', x=-6.51, y=69.00, z=-329.51] died, message: 'Librarian was slain by Vindicator'
+[02:04:44] [Server thread/INFO]: <d0gg> did they go in?
+[02:04:50] [Server thread/INFO]: <xopeanut> yesss
+[02:04:59] [Server thread/INFO]: <d0gg> fuuuuu
+[02:05:55] [Server thread/INFO]: <xopeanut> the raid is still going on? we both died
+[02:06:01] [Server thread/INFO]: <d0gg> yea
+[02:06:10] [Server thread/INFO]: <xopeanut> all my xp
+[02:06:31] [Server thread/INFO]: d0gg was slain by Ravager
+[02:06:38] [Server thread/INFO]: <d0gg> come on
+[02:06:39] [Server thread/INFO]: <xopeanut> lol
+[02:07:25] [Server thread/INFO]: d0gg was slain by Ravager
+[02:07:26] [Server thread/WARN]: d0gg moved too quickly! 50.18236209029541,13.000000200000002,220.1248769890364
+[02:07:33] [Server thread/INFO]: xopeanut has made the advancement [Cover Me With Diamonds]
+[02:07:35] [Server thread/INFO]: xopeanut was slain by Ravager
+[02:07:54] [Server thread/INFO]: Villager axw['Librarian'/259366, l='world', x=-0.49, y=69.00, z=-329.51] died, message: 'Librarian was slain by Vindicator'
+[02:08:10] [Server thread/INFO]: Villager axw['Farmer'/184062, l='world', x=-2.49, y=69.00, z=-328.51] died, message: 'Farmer was slain by Vindicator'
+[02:08:13] [Server thread/INFO]: Villager axw['Librarian'/183254, l='world', x=-4.49, y=69.00, z=-328.49] died, message: 'Librarian was slain by Vindicator'
+[02:08:37] [Server thread/INFO]: d0gg was slain by Ravager
+[02:08:41] [Server thread/INFO]: <d0gg> this is bad
+[02:08:46] [Server thread/INFO]: <d0gg> theyre killin his villagers
+[02:08:54] [Server thread/INFO]: xopeanut has made the advancement [Suit Up]
+[02:09:45] [Server thread/INFO]: <xopeanut> i have your cross bow
+[02:10:11] [Server thread/INFO]: <d0gg> they left
+[02:10:12] [Server thread/INFO]: xopeanut has made the advancement [Ol' Betsy]
+[02:10:18] [Server thread/INFO]: d0gg was slain by Ravager
+[02:10:24] [Server thread/INFO]: <d0gg> except for that
+[02:10:52] [Server thread/INFO]: xopeanut has made the advancement [Take Aim]
+[02:10:53] [Server thread/INFO]: xopeanut was slain by Ravager
+[02:12:37] [Server thread/INFO]: <xopeanut> theres one in his house
+[02:12:46] [Server thread/INFO]: <xopeanut> he cant get out
+[02:12:49] [Server thread/INFO]: <d0gg> yea I think he killed them all
+[02:13:18] [Server thread/INFO]: d0gg was slain by Ravager
+[02:14:56] [Server thread/INFO]: <d0gg> they're all dead :'(
+[02:15:08] [Server thread/INFO]: <xopeanut> hes going to be sooo mad
+[02:15:14] [Server thread/INFO]: <d0gg> maybe
+[02:15:17] [Server thread/INFO]: <d0gg> probably
+[02:15:42] [Server thread/INFO]: <d0gg> we shouldnt have gone in there once it started :(
+[02:15:58] [Server thread/INFO]: <xopeanut> yuppp
+[02:17:03] [Server thread/INFO]: <xopeanut> have my stuff?
+[02:17:08] [Server thread/INFO]: <d0gg> maybe some of it
+[02:17:14] [Server thread/INFO]: <d0gg> I think that guy took some
+[02:17:17] [Server thread/INFO]: <xopeanut> the raid still; going>
+[02:17:31] [Server thread/INFO]: <d0gg> yea theyre still out there somewhere
+[02:19:23] [Server thread/INFO]: <xopeanut> have a knie
+[02:19:37] [Server thread/INFO]: xopeanut has made the advancement [Monster Hunter]
+[02:19:42] [Server thread/INFO]: xopeanut was shot by Pillager
+[02:21:37] [Server thread/INFO]: <xopeanut> where you going
+[02:21:40] [Server thread/INFO]: <xopeanut> here
+[02:22:05] [Server thread/INFO]: <xopeanut> should we go to them>
+[02:23:19] [Server thread/INFO]: <xopeanut> theyremad
+[02:24:35] [Server thread/INFO]: <xopeanut> need fooood
+[02:25:12] [Server thread/INFO]: <xopeanut> need moree food
+[02:25:43] [Server thread/INFO]: <xopeanut> over here
+[02:25:56] [Server thread/INFO]: xopeanut has made the advancement [Voluntary Exile]
+[02:26:05] [Server thread/INFO]: <d0gg> stay out of the village
+[02:26:11] [Server thread/INFO]: <d0gg> dont cross the bridge
+[02:26:27] [Server thread/INFO]: <d0gg> althought I guess it doesnt matter now
+[02:26:34] [Server thread/INFO]: <xopeanut> yea
+[02:26:45] [Server thread/INFO]: <xopeanut> how many moreee
+[02:26:59] [Server thread/INFO]: <d0gg> iuno
+[02:29:51] [Server thread/INFO]: xopeanut was slain by Vindicator
+[02:30:05] [Server thread/INFO]: d0gg was slain by Vindicator
+[02:31:08] [Server thread/WARN]: xopeanut was kicked for floating too long!
+[02:31:08] [Server thread/INFO]: xopeanut lost connection: Flying is not enabled on this server
+[02:31:08] [Server thread/INFO]: xopeanut left the game
+[02:31:08] [Server thread/WARN]: handleDisconnection() called twice
+[02:32:00] [User Authenticator #53/INFO]: UUID of player xopeanut is 952e390b-eab0-4856-855a-e90136b1cea0
+[02:32:00] [Server thread/INFO]: xopeanut[/192.168.2.1:51972] logged in with entity id 805723 at (52.299999974668026, 79.0000002, -118.70000002533197)
+[02:32:00] [Server thread/INFO]: xopeanut joined the game
+[02:33:11] [Server thread/INFO]: d0gg was slain by Vex
+[02:33:51] [Server thread/INFO]: xopeanut was slain by Vex
+[02:34:17] [Server thread/INFO]: d0gg was slain by Vex
+[02:35:25] [Server thread/INFO]: xopeanut has completed the challenge [Hero of the Village]
+[02:35:25] [Server thread/INFO]: d0gg has completed the challenge [Hero of the Village]
+[02:35:27] [Server thread/INFO]: xopeanut was slain by Vex
+[02:35:34] [Server thread/INFO]: d0gg was slain by Vex
+[02:35:37] [Server thread/INFO]: <d0gg> fuuk
+[02:36:53] [Server thread/INFO]: <xopeanut> i hear villagers
+[02:37:18] [Server thread/INFO]: <d0gg> he may have a breeder
+[02:37:43] [Server thread/INFO]: <xopeanut> i dont hear it anymore
+[02:37:48] [Server thread/INFO]: <d0gg> ok I dont feel so bad anymore
+[02:37:51] [Server thread/INFO]: <d0gg> hes got tons of em
+[02:38:04] [Server thread/INFO]: <xopeanut> where?
+[02:38:28] [Server thread/INFO]: <xopeanut> lol
+[02:38:37] [Server thread/INFO]: <xopeanut> bring them up
+[02:38:45] [Server thread/INFO]: <d0gg> ill let him do that
+[02:39:08] [Server thread/INFO]: <d0gg> jeez that was a clusterfuck
+[02:39:16] [Server thread/INFO]: <xopeanut> yeah i had no weapons
+[02:39:54] [Server thread/INFO]: <xopeanut> all that and i lost everything
