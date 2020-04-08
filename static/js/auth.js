@@ -19,6 +19,9 @@ var refresh = function () {
     if (this.readyState == 4 && this.status == 200) {
       console.log("refresh done")
     }
+    if (this.readyState == 4 && this.status == 403) {
+      removeJWT();
+    }
   };
   xhttp.open("POST", "/auth/refresh", true);
   xhttp.send();
