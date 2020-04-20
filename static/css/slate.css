@@ -468,6 +468,13 @@ mark, .mark {
     padding-bottom: 4px;
 }
 
+.thumbnail-large img {
+    height: 256px;
+    width: 256px;
+    display: block;
+    padding-bottom: 4px;
+}
+
 .figure {
     display: inline-block;
 }
