@@ -61,4 +61,21 @@ var Migrations = []Migration{
 		) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8`,
 		version: 0.5,
 	},
+	Migration{
+		author: "mikeder",
+		query: `CREATE TABLE IF NOT EXISTS houses (
+			id int(11) NOT NULL AUTO_INCREMENT,
+			address varchar(100) NOT NULL,
+			zid int(11) NOT NULL,
+			zurl varchar(100) NOT NULL,
+			list_price DECIMAL(10,2),
+			sale_price DECIMAL(10,2),
+			sold tinyint(1) NOT NULL,
+			ctime datetime NOT NULL,
+			mtime timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, 
+			PRIMARY KEY (id),
+			UNIQUE KEY address (address)
+		) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8`,
+		version: 0.6,
+	},
 }
