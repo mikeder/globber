@@ -5,6 +5,8 @@ import (
 	"database/sql"
 	"log"
 	"time"
+
+	"github.com/jmoiron/sqlx"
 )
 
 // Migration is used to apply schema patches to a database.
@@ -15,7 +17,7 @@ type Migration struct {
 }
 
 // Migrate runs migrations on the provide db connection
-func Migrate(ctx context.Context, db *sql.DB) error {
+func Migrate(ctx context.Context, db *sqlx.DB) error {
 	patched := false
 	current := currentVersion(ctx, db)
 
@@ -57,7 +59,7 @@ func Migrate(ctx context.Context, db *sql.DB) error {
 	return nil
 }
 
-func currentVersion(ctx context.Context, db *sql.DB) float32 {
+func currentVersion(ctx context.Context, db *sqlx.DB) float32 {
 	const q = `SELECT version from version ORDER BY id DESC LIMIT 0, 1`
 	var version float32 = -1.0
 
@@ -81,7 +83,7 @@ func currentVersion(ctx context.Context, db *sql.DB) float32 {
 	return version
 }
 
-func updateVersion(ctx context.Context, db *sql.DB, author string, version float32) error {
+func updateVersion(ctx context.Context, db *sqlx.DB, author string, version float32) error {
 	const q = `INSERT INTO version(applied, author, version) VALUES (?, ?, ?);`
 
 	tx, err := db.BeginTx(ctx, nil)

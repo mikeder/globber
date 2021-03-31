@@ -71,8 +71,6 @@ func run() error {
 	if err != nil {
 		return err
 	}
-	db.SetMaxOpenConns(10)
-	db.SetMaxIdleConns(2)
 
 	authMan := auth.NewManager(db, cfg.TokenSecret)
 

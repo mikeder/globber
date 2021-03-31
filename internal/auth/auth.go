@@ -35,11 +35,11 @@ type Claims struct {
 // Manager coordinates authentication and user methods.
 type Manager struct {
 	TokenAuth *jwtauth.JWTAuth
-	userDB    *sql.DB
+	userDB    models.XODB
 }
 
 // NewManager returns a new instance of an authentication Manager.
-func NewManager(userDB *sql.DB, secret string) *Manager {
+func NewManager(userDB models.XODB, secret string) *Manager {
 	return &Manager{jwtauth.New("HS256", []byte(secret), nil), userDB}
 }
 

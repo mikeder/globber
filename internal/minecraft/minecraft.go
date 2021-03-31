@@ -28,7 +28,7 @@ type Server struct {
 	Latency        string   `json:"latency"`
 	OnlinePlayers  []Player `json:"online_players"`
 
-	playerDB *sql.DB
+	playerDB models.XODB
 }
 
 // Player represents a player on the server.
@@ -38,7 +38,7 @@ type Player struct {
 }
 
 // NewServer returns a server.
-func NewServer(addr string, port int, db *sql.DB) *Server {
+func NewServer(addr string, port int, db models.XODB) *Server {
 	srv := &Server{
 		Address:  addr,
 		Port:     port,

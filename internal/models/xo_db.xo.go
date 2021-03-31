@@ -12,23 +12,22 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
+
+	"github.com/jmoiron/sqlx"
 )
+
+const chunkSize = 100
 
 // XODB is the common interface for database operations that can be used with
 // types from schema 'blog'.
 //
 // This should work with database/sql.DB and database/sql.Tx.
 type XODB interface {
-	Exec(string, ...interface{}) (sql.Result, error)
-	ExecContext(context.Context, string, ...interface{}) (sql.Result, error)
-	Query(string, ...interface{}) (*sql.Rows, error)
-	QueryContext(context.Context, string, ...interface{}) (*sql.Rows, error)
-	QueryRow(string, ...interface{}) *sql.Row
-	QueryRowContext(context.Context, string, ...interface{}) *sql.Row
-}
+	sqlx.ExtContext
 
-// XOLog provides the log func used by generated queries.
-var XOLog = func(string, ...interface{}) {}
+	QueryRowContext(ctx context.Context, query string, args ...interface{}) *sql.Row
+	PrepareNamed(query string) (*sqlx.NamedStmt, error)
+}
 
 // ScannerValuer is the common interface for types that implement both the
 // database/sql.Scanner and sql/driver.Valuer interfaces.

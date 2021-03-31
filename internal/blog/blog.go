@@ -2,7 +2,6 @@ package blog
 
 import (
 	"context"
-	"database/sql"
 	"time"
 
 	"github.com/mikeder/globber/internal/models"
@@ -15,11 +14,11 @@ type Entry struct {
 
 // Store is where we keep blog posts and related information.
 type Store struct {
-	db *sql.DB
+	db models.XODB
 }
 
 // New returns a pointer to a blog Store.
-func New(db *sql.DB) *Store {
+func New(db models.XODB) *Store {
 	return &Store{db: db}
 }
 
