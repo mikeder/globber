@@ -1,6 +1,7 @@
 .DEFAULT_GOAL := build
 
 build:
+	go build -o ./bin/admin   ./cmd/admin
 	go build -o ./bin/globber ./cmd/globber
 
 image:
