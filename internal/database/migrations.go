@@ -2,7 +2,7 @@ package database
 
 // Migrations are applied to a database when requested.
 var Migrations = []Migration{
-	Migration{
+	{
 		author: "mikeder",
 		query: `CREATE TABLE IF NOT EXISTS version (
 			id int(11) NOT NULL AUTO_INCREMENT,
@@ -13,7 +13,7 @@ var Migrations = []Migration{
 		) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8`,
 		version: 0.1,
 	},
-	Migration{
+	{
 		author: "mikeder",
 		query: `CREATE TABLE IF NOT EXISTS authors (
 			id int(11) NOT NULL AUTO_INCREMENT,
@@ -25,7 +25,7 @@ var Migrations = []Migration{
 		) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8`,
 		version: 0.2,
 	},
-	Migration{
+	{
 		author: "mikeder",
 		query: `CREATE TABLE IF NOT EXISTS entries (
 			id int(11) NOT NULL AUTO_INCREMENT,
@@ -42,13 +42,13 @@ var Migrations = []Migration{
 		  ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8`,
 		version: 0.3,
 	},
-	Migration{
+	{
 		author: "mikeder",
 		query: `ALTER TABLE entries 
 			ADD highlight int(8)`,
 		version: 0.4,
 	},
-	Migration{
+	{
 		author: "mikeder",
 		query: `CREATE TABLE IF NOT EXISTS players (
 			id int(11) NOT NULL AUTO_INCREMENT,
@@ -61,7 +61,7 @@ var Migrations = []Migration{
 		) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8`,
 		version: 0.5,
 	},
-	Migration{
+	{
 		author: "mikeder",
 		query: `CREATE TABLE IF NOT EXISTS houses (
 			id int(11) NOT NULL AUTO_INCREMENT,
@@ -77,5 +77,20 @@ var Migrations = []Migration{
 			UNIQUE KEY address (address)
 		) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8`,
 		version: 0.6,
+	},
+	{
+		author: "mikeder",
+		query: `CREATE TABLE IF NOT EXISTS mcservers (
+			id int(11) NOT NULL AUTO_INCREMENT,
+			hostname varchar(100) NOT NULL,
+			port int(11) NOT NULL,
+			name varchar(100) NOT NULL,
+			rating DECIMAL(10,2),
+			ctime datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+			mtime timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, 
+			PRIMARY KEY (id),
+			UNIQUE KEY name (name)
+		) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8`,
+		version: 0.7,
 	},
 }
