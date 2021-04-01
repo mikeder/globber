@@ -2,17 +2,12 @@ version: '3.3'
 
 services:
   db:
-    # logging:
-    #   driver: none
     image: mysql:5.7
-    # volumes:
-    #   - db_data:/var/lib/mysql
     restart: always
     ports:
-      - 3306:3306
+      - 3306
     environment:
-      MYSQL_USER: "bloguser"
-      MYSQL_PASS: "test"
+      MYSQL_ROOT_HOST: '%'
       MYSQL_ROOT_PASSWORD: "root"
       MYSQL_DATABASE: "blog"
 
@@ -49,7 +44,5 @@ services:
       GLOBBER_DBNAME: "blog"
       GLOBBER_SITENAME: "SqweebNet"
       GLOBBER_TOKENSECRET: "THISISNOTASECRET"
-      GLOBBER_MINECRAFTHOST: "sqweeb.net"
+      GLOBBER_MINECRAFTHOST: "mc.sqweeb.net"
 
-volumes:
-    db_data: {}
