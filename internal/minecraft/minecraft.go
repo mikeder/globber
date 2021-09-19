@@ -33,8 +33,9 @@ type Server struct {
 
 // Player represents a player on the server.
 type Player struct {
-	ID   uuid.UUID `json:"id"`
-	Name string    `json:"name"`
+	ID       uuid.UUID     `json:"id"`
+	Name     string        `json:"name"`
+	LastSeen time.Duration `json:"last_seen"`
 }
 
 // NewServer returns a server.

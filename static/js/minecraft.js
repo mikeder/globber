@@ -43,6 +43,7 @@ var updatePlayers = function (players) {
     players.forEach(player => {
         var entry = document.createElement('li');
         entry.appendChild(document.createTextNode(player.name));
+        entry.appendChild(document.createTextNode(player.last_seen));
         player_list.appendChild(entry);
     });
 }
