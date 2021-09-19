@@ -14,6 +14,7 @@ import (
 	"github.com/mikeder/globber/internal/auth"
 	"github.com/mikeder/globber/internal/blog"
 	"github.com/mikeder/globber/internal/database"
+	"github.com/mikeder/globber/internal/geoip"
 	"github.com/mikeder/globber/internal/minecraft"
 
 	_ "net/http/pprof"
@@ -81,8 +82,13 @@ func run() error {
 
 	minecraftServer := minecraft.NewServer(cfg.MinecraftHost, cfg.MinecraftPort, db)
 
+	geo, err := geoip.NewGeoIPLocator()
+	if err != nil {
+		return err
+	}
+
 	handlerCFG := handlers.Config{SiteName: cfg.SiteName}
-	handler := handlers.New(authMan, blogStore, &handlerCFG, minecraftServer)
+	handler := handlers.New(authMan, blogStore, &handlerCFG, minecraftServer, geo)
 
 	server := &http.Server{
 		Addr:         ":3000",

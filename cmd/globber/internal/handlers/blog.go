@@ -21,6 +21,8 @@ type siteData struct {
 	Authenticated bool
 	SiteName      string
 	Username      string
+	ClientNetwork string
+	ClientCountry string
 }
 
 type blogPageData struct {
@@ -41,7 +43,9 @@ func (s *site) blogArchive(w http.ResponseWriter, r *http.Request) {
 
 	validTkn, username := auth.ValidateCtx(r.Context())
 
-	sd := siteData{validTkn, s.config.SiteName, username}
+	id := s.geo.Lookup(r.RemoteAddr)
+
+	sd := siteData{validTkn, s.config.SiteName, username, id.IPNet.IP.String(), id.CountryAlpha2}
 	data := blogPageData{sd, entries}
 
 	s.loadTemplates()
@@ -65,7 +69,8 @@ func (s *site) blogEntry(w http.ResponseWriter, r *http.Request) {
 
 	validTkn, username := auth.ValidateCtx(r.Context())
 
-	sd := siteData{validTkn, s.config.SiteName, username}
+	id := s.geo.Lookup(r.RemoteAddr)
+	sd := siteData{validTkn, s.config.SiteName, username, id.IPNet.IP.String(), id.CountryAlpha2}
 	data := blogPageData{sd, []blog.Entry{entry}}
 
 	s.loadTemplates()
@@ -100,7 +105,8 @@ func (s *site) blogCompose(w http.ResponseWriter, r *http.Request) {
 		}
 
 		validTkn, username := auth.ValidateCtx(r.Context())
-		sd := siteData{validTkn, s.config.SiteName, username}
+		id := s.geo.Lookup(r.RemoteAddr)
+		sd := siteData{validTkn, s.config.SiteName, username, id.IPNet.IP.String(), id.CountryAlpha2}
 		data := blogPageData{sd, []blog.Entry{*entry}}
 
 		s.loadTemplates()
@@ -109,7 +115,8 @@ func (s *site) blogCompose(w http.ResponseWriter, r *http.Request) {
 	}
 
 	validTkn, username := auth.ValidateCtx(r.Context())
-	sd := siteData{validTkn, s.config.SiteName, username}
+	id := s.geo.Lookup(r.RemoteAddr)
+	sd := siteData{validTkn, s.config.SiteName, username, id.IPNet.IP.String(), id.CountryAlpha2}
 	data := blogComposeData{sd, entry}
 
 	s.loadTemplates()
@@ -164,7 +171,8 @@ func (s *site) blogPage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	validTkn, username := auth.ValidateCtx(r.Context())
-	sd := siteData{validTkn, s.config.SiteName, username}
+	id := s.geo.Lookup(r.RemoteAddr)
+	sd := siteData{validTkn, s.config.SiteName, username, id.IPNet.IP.String(), id.CountryAlpha2}
 	data := blogPageData{sd, entries}
 
 	s.loadTemplates()
@@ -173,7 +181,8 @@ func (s *site) blogPage(w http.ResponseWriter, r *http.Request) {
 
 func (s *site) root(w http.ResponseWriter, r *http.Request) {
 	validTkn, username := auth.ValidateCtx(r.Context())
-	sd := siteData{validTkn, s.config.SiteName, username}
+	id := s.geo.Lookup(r.RemoteAddr)
+	sd := siteData{validTkn, s.config.SiteName, username, id.IPNet.IP.String(), id.CountryAlpha2}
 
 	s.loadTemplates()
 	web.Render(w, s.templates.Lookup("home.html"), sd)
@@ -181,7 +190,8 @@ func (s *site) root(w http.ResponseWriter, r *http.Request) {
 
 func (s *site) minecraft(w http.ResponseWriter, r *http.Request) {
 	validTkn, username := auth.ValidateCtx(r.Context())
-	sd := siteData{validTkn, s.config.SiteName, username}
+	id := s.geo.Lookup(r.RemoteAddr)
+	sd := siteData{validTkn, s.config.SiteName, username, id.IPNet.IP.String(), id.CountryAlpha2}
 
 	s.loadTemplates()
 	web.Render(w, s.templates.Lookup("minecraft.html"), sd)

@@ -10,6 +10,7 @@ import (
 	"github.com/go-chi/jwtauth"
 	"github.com/mikeder/globber/internal/auth"
 	"github.com/mikeder/globber/internal/blog"
+	"github.com/mikeder/globber/internal/geoip"
 	"github.com/mikeder/globber/internal/minecraft"
 )
 
@@ -20,7 +21,7 @@ type Config struct {
 
 // New returns an http.Handler with routes to support
 // the API for this application.
-func New(authMan *auth.Manager, bs *blog.Store, cfg *Config, mc *minecraft.Server) http.Handler {
+func New(authMan *auth.Manager, bs *blog.Store, cfg *Config, mc *minecraft.Server, geo *geoip.Locator) http.Handler {
 	adminAPI := adminAPI{authMan}
 	authAPI := authAPI{authMan}
 
@@ -98,4 +99,5 @@ type site struct {
 	config    *Config
 	templates *template.Template
 	mc        *minecraft.Server
+	geo       *geoip.Locator
 }
