@@ -29,6 +29,7 @@ func New(authMan *auth.Manager, bs *blog.Store, cfg *Config, mc *minecraft.Serve
 		blogStore: bs,
 		config:    cfg,
 		mc:        mc,
+		geo:       geo,
 	}
 	site.loadTemplates()
 
