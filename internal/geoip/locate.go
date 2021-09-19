@@ -50,6 +50,9 @@ func (l *Locator) load() error {
 	if err != nil {
 		return err
 	}
+	if len(tmp.Records) == 0 {
+		return errors.New("decoded gob had 0 records")
+	}
 	l.db = tmp
 
 	return nil
