@@ -24,17 +24,17 @@ func NewGeoIPLocator() (*Locator, error) {
 	return loc, nil
 }
 
-func (l *Locator) Lookup(ip string) *GeoIpRecord {
+func (l *Locator) Lookup(ip string) GeoIpRecord {
 	parsedIP := net.ParseIP(ip)
 	for _, alloc := range l.db.Records {
 		if alloc.IPNet.Contains(parsedIP) {
-			return &GeoIpRecord{ // return a copy so the caller can't modify the locator records
+			return GeoIpRecord{ // return a copy so the caller can't modify the locator records
 				CountryAlpha2: alloc.CountryAlpha2,
 				IPNet:         alloc.IPNet,
 			}
 		}
 	}
-	return nil
+	return GeoIpRecord{}
 }
 
 func (l *Locator) load() error {

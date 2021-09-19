@@ -48,7 +48,7 @@ func WriteRecordsGob(outputFile string) error {
 
 type GeoLocDB struct {
 	generated time.Time
-	Records   []*GeoIpRecord
+	Records   []GeoIpRecord
 }
 
 type GeoIpRecord struct {
@@ -75,7 +75,7 @@ func NewGenerator() *Generator {
 }
 
 // NewRecords builds a fresh slice of allocation records from the public lists, its not fast.
-func (g *Generator) NewRecords(ctx context.Context) ([]*GeoIpRecord, error) {
+func (g *Generator) NewRecords(ctx context.Context) ([]GeoIpRecord, error) {
 	// arin, ripe, apnic, lacnic, afrinic - ordered for performance
 	urls := []string{
 		"http://ftp.arin.net/pub/stats/arin/delegated-arin-extended-latest",
@@ -117,7 +117,7 @@ func (g *Generator) NewRecords(ctx context.Context) ([]*GeoIpRecord, error) {
 	reader.Comma = '|'
 
 	// slice out to allocation data
-	var records []*GeoIpRecord
+	var records []GeoIpRecord
 	for {
 		rec, err := reader.Read()
 		if err == io.EOF {
@@ -143,7 +143,7 @@ func (g *Generator) NewRecords(ctx context.Context) ([]*GeoIpRecord, error) {
 			// 32 - Log2(<number of addresses>) = the netmask.
 			network.Mask = net.CIDRMask(int(32-math.Log2(float64(mask))), 32)
 		}
-		record := &GeoIpRecord{
+		record := GeoIpRecord{
 			CountryAlpha2: rec[1],
 			IPNet:         network,
 		}
