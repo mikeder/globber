@@ -58,6 +58,7 @@ func New(authMan *auth.Manager, bs *blog.Store, cfg *Config, mc *minecraft.Serve
 		router.Get("/blog/entry/{slug}", site.blogEntry)
 
 		router.Get("/favicon.ico", faviconHandler)
+		router.Get("/geo", site.geoLookup)
 
 		router.Get("/minecraft", site.minecraft)
 		router.Get("/minecraft/ping", site.minecraftPing)
