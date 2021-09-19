@@ -1,9 +1,10 @@
 package handlers
 
 import (
-	"encoding/json"
 	"log"
 	"net/http"
+
+	"github.com/mikeder/globber/internal/web"
 )
 
 func (s *site) geoLookup(w http.ResponseWriter, r *http.Request) {
@@ -18,16 +19,5 @@ func (s *site) geoLookup(w http.ResponseWriter, r *http.Request) {
 		Country: id.CountryAlpha2,
 	}
 
-	b, err := json.Marshal(resp)
-	if err != nil {
-		log.Println(err)
-		return
-	}
-	_, err = w.Write(b)
-	if err != nil {
-		log.Println(err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-	w.WriteHeader(http.StatusOK)
+	web.Respond(w, resp, http.StatusOK)
 }
