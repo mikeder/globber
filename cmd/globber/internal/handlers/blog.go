@@ -44,6 +44,7 @@ func (s *site) blogArchive(w http.ResponseWriter, r *http.Request) {
 	validTkn, username := auth.ValidateCtx(r.Context())
 
 	id := s.geo.Lookup(r.RemoteAddr)
+	log.Printf("from: %s, in: %s\n", id.ParsedIP, id.CountryAlpha2)
 
 	sd := siteData{validTkn, s.config.SiteName, username, id.ParsedIP.String(), id.CountryAlpha2}
 	data := blogPageData{sd, entries}
@@ -70,6 +71,7 @@ func (s *site) blogEntry(w http.ResponseWriter, r *http.Request) {
 	validTkn, username := auth.ValidateCtx(r.Context())
 
 	id := s.geo.Lookup(r.RemoteAddr)
+	log.Printf("from: %s, in: %s\n", id.ParsedIP, id.CountryAlpha2)
 	sd := siteData{validTkn, s.config.SiteName, username, id.ParsedIP.String(), id.CountryAlpha2}
 	data := blogPageData{sd, []blog.Entry{entry}}
 
@@ -106,6 +108,8 @@ func (s *site) blogCompose(w http.ResponseWriter, r *http.Request) {
 
 		validTkn, username := auth.ValidateCtx(r.Context())
 		id := s.geo.Lookup(r.RemoteAddr)
+		log.Printf("from: %s, in: %s\n", id.ParsedIP, id.CountryAlpha2)
+
 		sd := siteData{validTkn, s.config.SiteName, username, id.ParsedIP.String(), id.CountryAlpha2}
 		data := blogPageData{sd, []blog.Entry{*entry}}
 
@@ -116,6 +120,7 @@ func (s *site) blogCompose(w http.ResponseWriter, r *http.Request) {
 
 	validTkn, username := auth.ValidateCtx(r.Context())
 	id := s.geo.Lookup(r.RemoteAddr)
+	log.Printf("from: %s, in: %s\n", id.ParsedIP, id.CountryAlpha2)
 	sd := siteData{validTkn, s.config.SiteName, username, id.ParsedIP.String(), id.CountryAlpha2}
 	data := blogComposeData{sd, entry}
 
@@ -172,6 +177,7 @@ func (s *site) blogPage(w http.ResponseWriter, r *http.Request) {
 
 	validTkn, username := auth.ValidateCtx(r.Context())
 	id := s.geo.Lookup(r.RemoteAddr)
+	log.Printf("from: %s, in: %s\n", id.ParsedIP, id.CountryAlpha2)
 	sd := siteData{validTkn, s.config.SiteName, username, id.ParsedIP.String(), id.CountryAlpha2}
 	data := blogPageData{sd, entries}
 
@@ -182,6 +188,7 @@ func (s *site) blogPage(w http.ResponseWriter, r *http.Request) {
 func (s *site) root(w http.ResponseWriter, r *http.Request) {
 	validTkn, username := auth.ValidateCtx(r.Context())
 	id := s.geo.Lookup(r.RemoteAddr)
+	log.Printf("from: %s, in: %s\n", id.ParsedIP, id.CountryAlpha2)
 	sd := siteData{validTkn, s.config.SiteName, username, id.ParsedIP.String(), id.CountryAlpha2}
 
 	s.loadTemplates()
@@ -191,6 +198,7 @@ func (s *site) root(w http.ResponseWriter, r *http.Request) {
 func (s *site) minecraft(w http.ResponseWriter, r *http.Request) {
 	validTkn, username := auth.ValidateCtx(r.Context())
 	id := s.geo.Lookup(r.RemoteAddr)
+	log.Printf("from: %s, in: %s\n", id.ParsedIP, id.CountryAlpha2)
 	sd := siteData{validTkn, s.config.SiteName, username, id.ParsedIP.String(), id.CountryAlpha2}
 
 	s.loadTemplates()
