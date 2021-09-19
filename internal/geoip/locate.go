@@ -30,11 +30,12 @@ func (l *Locator) Lookup(ip string) GeoIpRecord {
 		if alloc.IPNet.Contains(parsedIP) {
 			return GeoIpRecord{ // return a copy so the caller can't modify the locator records
 				CountryAlpha2: alloc.CountryAlpha2,
+				ParsedIP:      parsedIP,
 				IPNet:         alloc.IPNet,
 			}
 		}
 	}
-	return GeoIpRecord{}
+	return GeoIpRecord{CountryAlpha2: "EARF", ParsedIP: parsedIP}
 }
 
 func (l *Locator) load() error {

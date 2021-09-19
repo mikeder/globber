@@ -53,6 +53,7 @@ type GeoLocDB struct {
 
 type GeoIpRecord struct {
 	CountryAlpha2 string
+	ParsedIP      net.IP
 	IPNet         net.IPNet
 }
 
