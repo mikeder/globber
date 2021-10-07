@@ -23,6 +23,9 @@ COPY --from=builder /src/bin/globber /bin/globber
 COPY --from=builder /src/static ./static/
 COPY --from=builder /src/templates ./templates/
 
+HEALTHCHECK --interval=10s --timeout=5s \
+    CMD curl http://localhost:3000 || exit 1
+
 EXPOSE 3000
 ENTRYPOINT /bin/globber
 
