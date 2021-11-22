@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/golang-jwt/jwt/v4"
 	"github.com/mikeder/globber/internal/auth"
 	"github.com/mikeder/globber/internal/web"
 )
@@ -47,8 +46,8 @@ func (a *authAPI) Login(w http.ResponseWriter, r *http.Request) {
 		Access  string `json:"access_token"`
 		Refresh string `json:"refresh_token"`
 	}{
-		Access:  tokens.Access.Raw,
-		Refresh: tokens.Refresh.Raw,
+		Access:  tokens.Access,
+		Refresh: tokens.Refresh,
 	}
 
 	ac, rc := newCookies(tokens)
@@ -81,9 +80,7 @@ func (a *authAPI) Refresh(w http.ResponseWriter, r *http.Request) {
 
 	tokens, err := a.manager.Refresh(r.Context(),
 		&auth.Tokens{
-			Refresh: &jwt.Token{
-				Raw: refresh.Value,
-			},
+			Refresh: refresh.Raw,
 		})
 
 	if err != nil {
@@ -109,8 +106,8 @@ func (a *authAPI) Refresh(w http.ResponseWriter, r *http.Request) {
 		Access  string `json:"access_token"`
 		Refresh string `json:"refresh_token"`
 	}{
-		Access:  tokens.Access.Raw,
-		Refresh: tokens.Refresh.Raw,
+		Access:  tokens.Access,
+		Refresh: tokens.Refresh,
 	}
 
 	ac, rc := newCookies(tokens)
@@ -149,7 +146,7 @@ func newCookies(t *auth.Tokens) (access, refresh http.Cookie) {
 		Path:     "/",
 		HttpOnly: true,
 		Expires:  t.AccessTTL,
-		Value:    t.Access.Raw,
+		Value:    t.Access,
 		SameSite: http.SameSiteDefaultMode,
 	}
 	refresh = http.Cookie{
@@ -157,7 +154,7 @@ func newCookies(t *auth.Tokens) (access, refresh http.Cookie) {
 		Path:     "/",
 		HttpOnly: true,
 		Expires:  t.RefreshTTL,
-		Value:    t.Refresh.Raw,
+		Value:    t.Refresh,
 		SameSite: http.SameSiteDefaultMode,
 	}
 	return

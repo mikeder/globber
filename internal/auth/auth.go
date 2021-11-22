@@ -157,14 +157,17 @@ func (m *Manager) Refresh(ctx context.Context, t *Tokens) (*Tokens, error) {
 	}
 
 	// parse and validate incoming refresh token
-	rt, err := jwt.Parse(t.Refresh.Raw, func(token *jwt.Token) (interface{}, error) {
+	rt, err := jwt.Parse(t.Refresh, func(token *jwt.Token) (interface{}, error) {
 		// Don't forget to validate the alg is what you expect:
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
 
 		return m.signingSecret, nil
 	})
+	if err != nil {
+		return nil, errors.Wrap(err, "parse refresh token")
+	}
 
 	cl, ok := rt.Claims.(Claims)
 	if !ok {
@@ -207,10 +210,10 @@ func (m *Manager) ListTokens(ctx context.Context) interface{} {
 
 // Tokens contains access and refresh JWT's.
 type Tokens struct {
-	Access     *jwt.Token `json:"access_token"`
-	AccessTTL  time.Time  `json:"access_ttl"`
-	Refresh    *jwt.Token `json:"refresh_token"`
-	RefreshTTL time.Time  `json:"refresh_ttl"`
+	Access     string    `json:"access_token"`
+	AccessTTL  time.Time `json:"access_ttl"`
+	Refresh    string    `json:"refresh_token"`
+	RefreshTTL time.Time `json:"refresh_ttl"`
 }
 
 func (m *Manager) newTokens(u *models.Author) (*Tokens, error) {
@@ -232,26 +235,27 @@ func (m *Manager) newTokens(u *models.Author) (*Tokens, error) {
 		},
 	}
 
+	var signErr error
 	at := jwt.NewWithClaims(signingMethod, accessClaims)
-	// ats, err := at.SignedString(m.signingSecret)
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
+	ats, signErr := at.SignedString(m.signingSecret)
+	if signErr != nil {
+		log.Fatal(signErr)
+	}
 
 	rt := jwt.NewWithClaims(signingMethod, refreshClaims)
-	// rts, err := rt.SignedString(m.signingSecret)
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
+	rts, signErr := rt.SignedString(m.signingSecret)
+	if signErr != nil {
+		log.Fatal(signErr)
+	}
 
 	mu.Lock()
 	tokenCache[refreshClaims.ID] = time.Now()
 	mu.Unlock()
 
 	return &Tokens{
-		Access:     at,
+		Access:     ats,
 		AccessTTL:  accessExp,
-		Refresh:    rt,
+		Refresh:    rts,
 		RefreshTTL: refreshExp,
 	}, nil
 }
