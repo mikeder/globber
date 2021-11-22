@@ -222,10 +222,20 @@ func (m *Manager) newTokens(u *models.Author) (*Tokens, error) {
 	accessClaims := &Claims{
 		Name:  u.Name,
 		Email: u.Email,
+		RegisteredClaims: jwt.RegisteredClaims{
+			Audience:  jwt.ClaimStrings{"globber"},
+			ExpiresAt: jwt.NewNumericDate(accessExp),
+			ID:        uuid.New().String(),
+			Issuer:    m.name,
+			IssuedAt:  jwt.NewNumericDate(now),
+			Subject:   strconv.Itoa(u.ID),
+		},
 	}
 
 	refreshExp := now.Add(refreshTTL)
 	refreshClaims := &Claims{
+		Name:  u.Name,
+		Email: u.Email,
 		RegisteredClaims: jwt.RegisteredClaims{
 			Audience:  jwt.ClaimStrings{"globber"},
 			ExpiresAt: jwt.NewNumericDate(refreshExp),
