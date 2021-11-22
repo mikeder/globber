@@ -38,6 +38,8 @@ services:
       - 3000:3000
     restart: always
     command: "/bin/globber"
+    volumes:
+      - ./templates/html:/templates/html
     environment:
       GLOBBER_DBUSER: "root"
       GLOBBER_DBPASS: "root"
@@ -45,5 +47,5 @@ services:
       GLOBBER_DBNAME: "blog"
       GLOBBER_SITENAME: "SqweebNet"
       GLOBBER_TOKENSECRET: "THISISNOTASECRET"
-      GLOBBER_MINECRAFTHOST: "mc.sqweeb.net"
+      GLOBBER_MINECRAFTHOST: "play.penguincraft.io"
 
