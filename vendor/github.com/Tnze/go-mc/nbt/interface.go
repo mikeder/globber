@@ -1,9 +1,12 @@
 package nbt
 
-type Unmarshaler interface {
-	Unmarshal(tagType byte, tagName string, r DecoderReader) error
+import "io"
+
+type NBTDecoder interface {
+	Decode(tagType byte, r DecoderReader) error
 }
 
-//type Marshaler interface{
-//	Marshal()
-//}
+type NBTEncoder interface {
+	TagType() byte
+	Encode(w io.Writer) error
+}

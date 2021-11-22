@@ -4,8 +4,8 @@
 // or net/packet.Field .
 //
 // It's very recommended that use SetLanguage before using Message.String or Message.ClearString,
-// or the translate message will be ignore.
-// Note: The package of data/lang/... will SetLanguage on theirs init() so you don't need do again.
+// or the `github.com/Tnze/go-mc/data/en-us` will be used.
+// Note: The package of data/lang/... will SetLanguage on theirs init() so you don't need to call by your self.
 package chat
 
 import (
@@ -15,17 +15,18 @@ import (
 	"regexp"
 	"strings"
 
+	en_us "github.com/Tnze/go-mc/data/lang/en-us"
 	pk "github.com/Tnze/go-mc/net/packet"
 )
 
-//Message is a message sent by other
+// Message is a message sent by other
 type Message jsonChat
 
 type jsonChat struct {
 	Text string `json:"text,omitempty"`
 
 	Bold          bool   `json:"bold,omitempty"`          //粗体
-	Italic        bool   `json:"Italic,omitempty"`        //斜体
+	Italic        bool   `json:"italic,omitempty"`        //斜体
 	UnderLined    bool   `json:"underlined,omitempty"`    //下划线
 	StrikeThrough bool   `json:"strikethrough,omitempty"` //删除线
 	Obfuscated    bool   `json:"obfuscated,omitempty"`    //随机
@@ -33,11 +34,14 @@ type jsonChat struct {
 
 	Translate string            `json:"translate,omitempty"`
 	With      []json.RawMessage `json:"with,omitempty"` // How can go handle an JSON array with Object and String?
-	Extra     []jsonChat        `json:"extra,omitempty"`
+	Extra     []Message         `json:"extra,omitempty"`
 }
 
 //UnmarshalJSON decode json to Message
 func (m *Message) UnmarshalJSON(jsonMsg []byte) (err error) {
+	if len(jsonMsg) == 0 {
+		return io.EOF
+	}
 	if jsonMsg[0] == '"' {
 		err = json.Unmarshal(jsonMsg, &m.Text) //Unmarshal as jsonString
 	} else {
@@ -46,23 +50,51 @@ func (m *Message) UnmarshalJSON(jsonMsg []byte) (err error) {
 	return
 }
 
-//Decode for a ChatMsg packet
-func (m *Message) Decode(r pk.DecodeReader) error {
+// ReadFrom decode Message in a ChatMsg packet
+func (m *Message) ReadFrom(r io.Reader) (int64, error) {
 	var Len pk.VarInt
-	if err := Len.Decode(r); err != nil {
-		return err
+	if n, err := Len.ReadFrom(r); err != nil {
+		return n, err
 	}
-
-	return json.NewDecoder(io.LimitReader(r, int64(Len))).Decode(m)
+	lr := &io.LimitedReader{R: r, N: int64(Len)}
+	err := json.NewDecoder(lr).Decode(m)
+	return int64(Len) - lr.N, err
 }
 
-//Encode for a ChatMsg packet
-func (m Message) Encode() []byte {
+// WriteTo encode Message into a ChatMsg packet
+func (m Message) WriteTo(w io.Writer) (int64, error) {
 	code, err := json.Marshal(m)
 	if err != nil {
 		panic(err)
 	}
-	return pk.String(code).Encode()
+	return pk.String(code).WriteTo(w)
+}
+
+func (m *Message) Append(extraMsg ...Message) {
+	origLen := len(m.Extra)
+	finalLen := origLen + len(extraMsg)
+	if cap(m.Extra) < len(m.Extra)+len(extraMsg) {
+		// pre expansion
+		extra := make([]Message, finalLen)
+		copy(extra, m.Extra)
+		m.Extra = extra
+	}
+	for _, v := range extraMsg {
+		m.Extra = append(m.Extra, v)
+	}
+}
+
+func Text(str string) Message {
+	return Message{Text: str}
+}
+
+func TranslateMsg(key string, with ...Message) (m Message) {
+	m.Translate = key
+	m.With = make([]json.RawMessage, len(with))
+	for i, v := range with {
+		m.With[i], _ = json.Marshal(v)
+	}
+	return
 }
 
 var fmtCode = map[byte]string{
@@ -110,8 +142,8 @@ var colors = map[string]string{
 }
 
 // translateMap is the translation table.
-// By default it's a void map.
-var translateMap = map[string]string{}
+// By default it's en-us.
+var translateMap = en_us.Map
 
 // SetLanguage set the translate map to this map.
 func SetLanguage(trans map[string]string) {
@@ -121,7 +153,7 @@ func SetLanguage(trans map[string]string) {
 // ClearString return the message String without escape sequence for ansi color.
 func (m Message) ClearString() string {
 	var msg strings.Builder
-	text, _ := trans(m.Text, false)
+	text, _ := TransCtrlSeq(m.Text, false)
 	msg.WriteString(text)
 
 	//handle translate
@@ -142,7 +174,7 @@ func (m Message) ClearString() string {
 
 	if m.Extra != nil {
 		for i := range m.Extra {
-			msg.WriteString(Message(m.Extra[i]).ClearString())
+			msg.WriteString(m.Extra[i].ClearString())
 		}
 	}
 	return msg.String()
@@ -150,7 +182,7 @@ func (m Message) ClearString() string {
 
 // String return the message string with escape sequence for ansi color.
 // To convert Translated Message to string, you must set
-// On windows, you may want print this string using github.com/mattn/go-colorable.
+// On windows, you may want print this string using github.com/matte/go-colorable.
 func (m Message) String() string {
 	var msg, format strings.Builder
 	if m.Bold {
@@ -172,7 +204,7 @@ func (m Message) String() string {
 		msg.WriteString("\033[" + format.String()[:format.Len()-1] + "m")
 	}
 
-	text, ok := trans(m.Text, true)
+	text, ok := TransCtrlSeq(m.Text, true)
 	msg.WriteString(text)
 
 	//handle translate
@@ -193,7 +225,7 @@ func (m Message) String() string {
 
 	if m.Extra != nil {
 		for i := range m.Extra {
-			msg.WriteString(Message(m.Extra[i]).String())
+			msg.WriteString(m.Extra[i].String())
 		}
 	}
 
@@ -205,7 +237,10 @@ func (m Message) String() string {
 
 var fmtPat = regexp.MustCompile("(?i)§[0-9A-FK-OR]")
 
-func trans(str string, ansi bool) (dst string, change bool) {
+// TransCtrlSeq will transform control sequences into ANSI code
+// or simply filter them. Depends on the second argument.
+// if the str contains control sequences, returned change=true.
+func TransCtrlSeq(str string, ansi bool) (dst string, change bool) {
 	dst = fmtPat.ReplaceAllStringFunc(
 		str,
 		func(str string) string {

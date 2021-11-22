@@ -4,7 +4,6 @@ import (
 	"flag"
 	"log"
 	"net/http"
-	"os"
 	"time"
 
 	"github.com/go-sql-driver/mysql"
@@ -24,23 +23,18 @@ const envPrefix string = "globber"
 
 func main() {
 	if err := run(); err != nil {
-		log.SetOutput(os.Stderr)
 		log.Fatal(err)
 	}
 }
 
 func run() error {
-	log.SetOutput(os.Stdout)
-	go func() {
-		http.ListenAndServe(":3030", nil)
-	}()
-
 	cfg := struct {
 		DbUser        string `default:"root" desc:"Username for database connection."`
 		DbPass        string `default:"root" desc:"Password for database connection."`
 		DbHost        string `default:"db" desc:"Hostname for database connection."`
 		DbName        string `default:"blog" desc:"Database schema name."`
 		SiteName      string `default:"TestBlog" desc:"Name to be used for Title tags."`
+		SiteURL       string `default:"test.blog" desc:"Site URL used for issuing tokens.`
 		TokenSecret   string `default:"SUBERSECRETT" desc:"Secret string for generating auth tokens"`
 		MinecraftHost string
 		MinecraftPort int `default:"25565"`
@@ -73,7 +67,7 @@ func run() error {
 		return err
 	}
 
-	authMan := auth.NewManager(db, cfg.TokenSecret)
+	authMan := auth.NewManager([]byte(cfg.TokenSecret), cfg.SiteURL, db)
 
 	// print a token for debugging auth endpoints
 	log.Println(authMan.DebugToken())

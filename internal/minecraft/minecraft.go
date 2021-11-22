@@ -3,6 +3,7 @@ package minecraft
 import (
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"log"
 	"time"
 
@@ -66,7 +67,7 @@ type status struct {
 
 // PingList performs a ping and list player command on the server.
 func (s *Server) PingList() error {
-	resp, delay, err := bot.PingAndList(s.Address, s.Port)
+	resp, delay, err := bot.PingAndList(fmt.Sprintf("%s:%d", s.Address, s.Port))
 	if err != nil {
 		s.Online = false
 		return errors.Wrap(err, "ping and list players")

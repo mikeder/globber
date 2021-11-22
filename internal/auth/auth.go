@@ -3,12 +3,14 @@ package auth
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"log"
+	"strconv"
 	"sync"
 	"time"
 
-	"github.com/dgrijalva/jwt-go"
-	"github.com/go-chi/jwtauth"
+	"github.com/go-chi/jwtauth/v5"
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/bcrypt"
@@ -19,35 +21,45 @@ import (
 const (
 	accessTTL  = 15 * time.Minute
 	refreshTTL = 24 * time.Hour
-	tokenIss   = "sqweeb.net"
 )
 
+var signingMethod = jwt.SigningMethodHS256
 var tokenCache = map[string]time.Time{}
 var mu sync.Mutex
 
 // Claims holds our authorized claims and standard JWT claims.
 type Claims struct {
-	Name  string `json:"name"`
-	Email string `json:"email"`
-	jwt.StandardClaims
+	Name    string `json:"name"`
+	Country string `json:"country"`
+	Email   string `json:"email"`
+	jwt.RegisteredClaims
 }
 
 // Manager coordinates authentication and user methods.
 type Manager struct {
-	TokenAuth *jwtauth.JWTAuth
-	userDB    models.XODB
+	Auth          *jwtauth.JWTAuth
+	signingSecret []byte
+	name          string
+	userDB        models.XODB
 }
 
 // NewManager returns a new instance of an authentication Manager.
-func NewManager(userDB models.XODB, secret string) *Manager {
-	return &Manager{jwtauth.New("HS256", []byte(secret), nil), userDB}
+func NewManager(secret []byte, name string, userDB models.XODB) *Manager {
+	theMan := &Manager{
+		Auth:          jwtauth.New(signingMethod.Alg(), secret, nil),
+		signingSecret: secret,
+		name:          name,
+		userDB:        userDB,
+	}
+
+	return theMan
 }
 
 // ValidateCtx checks a context for a valid token and a username.
 func ValidateCtx(ctx context.Context) (bool, string) {
 	var user string
 
-	token, claims, err := jwtauth.FromContext(ctx)
+	_, claims, err := jwtauth.FromContext(ctx)
 	if err != nil {
 		log.Print(errors.Wrap(err, "checking context for token and claims"))
 		return false, user
@@ -57,7 +69,7 @@ func ValidateCtx(ctx context.Context) (bool, string) {
 		user = name.(string)
 	}
 
-	return token.Valid, user
+	return true, user
 }
 
 // AddUser adds a new User to the database.
@@ -101,14 +113,18 @@ func (m *Manager) AddUser(ctx context.Context, u *User) error {
 
 // DebugToken returns a token for debug purposes, it is valid for 1 hour.
 func (m *Manager) DebugToken() string {
-	expires := time.Now().Add(time.Hour * 1)
-	_, tokenString, _ := m.TokenAuth.Encode(Claims{
-		Name: "superuser",
-		StandardClaims: jwt.StandardClaims{
-			Audience:  "debug",
-			ExpiresAt: expires.Unix(),
-		},
-	})
+	claims := jwt.MapClaims{
+		"aud": "globber-debug",
+		"exp": time.Now().Add(time.Hour * 1).Unix(),
+		"sub": "superuser",
+	}
+
+	token := jwt.NewWithClaims(signingMethod, claims)
+	tokenString, err := token.SignedString(m.signingSecret)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	return tokenString
 }
 
@@ -140,49 +156,35 @@ func (m *Manager) Refresh(ctx context.Context, t *Tokens) (*Tokens, error) {
 		return nil, errors.New("nil token given to refresh")
 	}
 
-	validToken, err := m.TokenAuth.Decode(t.Refresh.Raw)
-	if err != nil {
-		return nil, err
-	}
+	// parse and validate incoming refresh token
+	rt, err := jwt.Parse(t.Refresh.Raw, func(token *jwt.Token) (interface{}, error) {
+		// Don't forget to validate the alg is what you expect:
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
+		}
 
-	var claims jwt.MapClaims
-	if tokenClaims, ok := validToken.Claims.(jwt.MapClaims); ok {
-		claims = tokenClaims
-	}
+		return m.signingSecret, nil
+	})
 
-	log.Print("perform further token validation")
-	log.Print(validToken.Valid)
-
-	// check token cache for incoming token id
-	tmp, ok := claims["jti"]
+	cl, ok := rt.Claims.(Claims)
 	if !ok {
-		return nil, errors.New("bad jti")
-	}
-
-	jti, ok := tmp.(string)
-	if !ok {
-		return nil, errors.Wrap(err, "bad jti")
+		return nil, errors.New("invalid claims")
 	}
 
 	mu.Lock()
-	if _, ok := tokenCache[jti]; !ok {
-		mu.Unlock()
-		return nil, errors.New("unknown jti")
-	}
+	_, tokenKnown := tokenCache[cl.ID]
 	mu.Unlock()
 
-	// TODO: reap the tokenCache of old id's
-
-	tmp, ok = claims["sub"]
-	if !ok {
-		return nil, errors.Wrap(err, "bad subject")
+	if !tokenKnown {
+		return nil, errors.New("unknown token")
 	}
 
-	// TODO: is this really necessary?
-	suid, ok := tmp.(string)
-	buid := []byte(suid)
+	uid, err := strconv.Atoi(cl.Subject)
+	if err != nil {
+		return nil, errors.Wrap(err, "parse subject uid")
+	}
 
-	user, err := models.AuthorByID(ctx, m.userDB, int(buid[0]))
+	user, err := models.AuthorByID(ctx, m.userDB, uid)
 	if err != nil {
 		return nil, errors.Wrap(err, "getting user from database")
 	}
@@ -217,43 +219,39 @@ func (m *Manager) newTokens(u *models.Author) (*Tokens, error) {
 	accessClaims := &Claims{
 		Name:  u.Name,
 		Email: u.Email,
-		StandardClaims: jwt.StandardClaims{
-			Audience:  "globber",
-			ExpiresAt: accessExp.Unix(),
-			Id:        uuid.New().String(),
-			Issuer:    tokenIss,
-			IssuedAt:  now.Unix(),
-		},
 	}
 
 	refreshExp := now.Add(refreshTTL)
 	refreshClaims := &Claims{
-		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: refreshExp.Unix(),
-			Subject:   string(u.ID),
-			Id:        uuid.New().String(),
-			Issuer:    tokenIss,
-			IssuedAt:  now.Unix(),
+		RegisteredClaims: jwt.RegisteredClaims{
+			Audience:  jwt.ClaimStrings{"globber"},
+			ExpiresAt: jwt.NewNumericDate(refreshExp),
+			ID:        uuid.New().String(),
+			Issuer:    m.name,
+			IssuedAt:  jwt.NewNumericDate(now),
 		},
 	}
 
-	access, _, err := m.TokenAuth.Encode(accessClaims)
-	if err != nil {
-		return nil, err
-	}
-	refresh, _, err := m.TokenAuth.Encode(refreshClaims)
-	if err != nil {
-		return nil, err
-	}
+	at := jwt.NewWithClaims(signingMethod, accessClaims)
+	// ats, err := at.SignedString(m.signingSecret)
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+
+	rt := jwt.NewWithClaims(signingMethod, refreshClaims)
+	// rts, err := rt.SignedString(m.signingSecret)
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
 
 	mu.Lock()
-	tokenCache[refreshClaims.Id] = time.Now()
+	tokenCache[refreshClaims.ID] = time.Now()
 	mu.Unlock()
 
 	return &Tokens{
-		Access:     access,
+		Access:     at,
 		AccessTTL:  accessExp,
-		Refresh:    refresh,
+		Refresh:    rt,
 		RefreshTTL: refreshExp,
 	}, nil
 }

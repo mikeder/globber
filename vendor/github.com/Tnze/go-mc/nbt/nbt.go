@@ -3,7 +3,6 @@
 package nbt
 
 import (
-	"bufio"
 	"io"
 )
 
@@ -22,10 +21,15 @@ const (
 	TagCompound
 	TagIntArray
 	TagLongArray
+	TagNone = 0xFF
 )
 
+func IsArrayTag(ty byte) bool {
+	return ty == TagByteArray || ty == TagIntArray || ty == TagLongArray
+}
+
 type DecoderReader = interface {
-	io.ByteScanner
+	io.ByteReader
 	io.Reader
 }
 type Decoder struct {
@@ -37,7 +41,20 @@ func NewDecoder(r io.Reader) *Decoder {
 	if br, ok := r.(DecoderReader); ok {
 		d.r = br
 	} else {
-		d.r = bufio.NewReader(r)
+		d.r = reader{r}
 	}
 	return d
+}
+
+type reader struct {
+	io.Reader
+}
+
+func (r reader) ReadByte() (byte, error) {
+	var b [1]byte
+	n, err := r.Read(b[:])
+	if n == 1 {
+		return b[0], nil
+	}
+	return 0, err
 }

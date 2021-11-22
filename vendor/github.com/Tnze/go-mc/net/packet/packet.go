@@ -9,26 +9,24 @@ import (
 
 // Packet define a net data package
 type Packet struct {
-	ID   byte
+	ID   int32
 	Data []byte
 }
 
 //Marshal generate Packet with the ID and Fields
-func Marshal(ID byte, fields ...FieldEncoder) (pk Packet) {
-	pk.ID = ID
-
+func Marshal(id int32, fields ...FieldEncoder) (pk Packet) {
+	var pb Builder
 	for _, v := range fields {
-		pk.Data = append(pk.Data, v.Encode()...)
+		pb.WriteField(v)
 	}
-
-	return
+	return pb.Packet(id)
 }
 
 //Scan decode the packet and fill data into fields
 func (p Packet) Scan(fields ...FieldDecoder) error {
 	r := bytes.NewReader(p.Data)
 	for _, v := range fields {
-		err := v.Decode(r)
+		_, err := v.ReadFrom(r)
 		if err != nil {
 			return err
 		}
@@ -37,105 +35,115 @@ func (p Packet) Scan(fields ...FieldDecoder) error {
 }
 
 // Pack 打包一个数据包
-func (p *Packet) Pack(threshold int) (pack []byte) {
-	data := []byte{p.ID}           //data
-	data = append(data, p.Data...) //data
-
+func (p *Packet) Pack(w io.Writer, threshold int) error {
+	var content bytes.Buffer
+	if _, err := VarInt(p.ID).WriteTo(&content); err != nil {
+		panic(err)
+	}
+	if _, err := content.Write(p.Data); err != nil {
+		panic(err)
+	}
 	if threshold > 0 { //是否启用了压缩
-		if len(data) > threshold { //是否需要压缩
-			Len := len(data)
-			VarLen := VarInt(Len).Encode()
-			data = Compress(data)
-
-			pack = append(pack, VarInt(len(VarLen)+len(data)).Encode()...)
-			pack = append(pack, VarLen...)
-			pack = append(pack, data...)
+		rawLen := content.Len()
+		uncompressedLen := VarInt(rawLen)
+		if rawLen > threshold { //是否需要压缩
+			compress(&content)
 		} else {
-			pack = append(pack, VarInt(int32(len(data)+1)).Encode()...)
-			pack = append(pack, 0x00)
-			pack = append(pack, data...)
+			uncompressedLen = 0
+		}
+
+		uncompressedLenLen, _ := uncompressedLen.WriteTo(io.Discard)
+		if _, err := VarInt(uncompressedLenLen + int64(rawLen)).WriteTo(w); err != nil {
+			return err
+		}
+
+		if _, err := uncompressedLen.WriteTo(w); err != nil {
+			return err
+		}
+		if _, err := content.WriteTo(w); err != nil {
+			return err
 		}
 	} else {
-		pack = append(pack, VarInt(int32(len(data))).Encode()...) //len
-		pack = append(pack, data...)
+		if _, err := VarInt(content.Len()).WriteTo(w); err != nil {
+			return err
+		}
+		if _, err := content.WriteTo(w); err != nil {
+			return err
+		}
 	}
 
-	return
+	return nil
 }
 
-// RecvPacket receive a packet from server
-func RecvPacket(r io.ByteReader, useZlib bool) (*Packet, error) {
-	var len int
-	for i := 0; i < 5; i++ { //读数据前的长度标记
-		b, err := r.ReadByte()
-		if err != nil {
-			return nil, fmt.Errorf("read len of packet fail: %v", err)
-		}
-		len |= int(b&0x7F) << uint(7*i)
-		if b&0x80 == 0 {
-			break
-		}
+// UnPack in-place decompression a packet
+func (p *Packet) UnPack(r io.Reader, threshold int) error {
+	var length VarInt
+	if _, err := length.ReadFrom(r); err != nil {
+		return err
 	}
-
-	if len < 1 {
-		return nil, fmt.Errorf("packet length too short")
+	if length < 1 {
+		return fmt.Errorf("packet length too short")
 	}
-
-	data := make([]byte, len) //读包内容
-	var err error
-	for i := 0; i < len; i++ {
-		data[i], err = r.ReadByte()
-		if err != nil {
-			return nil, fmt.Errorf("read content of packet fail: %v", err)
-		}
+	buf := make([]byte, length)
+	if _, err := io.ReadFull(r, buf); err != nil {
+		return fmt.Errorf("read content of packet fail: %w", err)
 	}
+	buffer := bytes.NewBuffer(buf)
 
 	//解压数据
-	if useZlib {
-		return UnCompress(data)
+	if threshold > 0 {
+		if err := unCompress(buffer); err != nil {
+			return err
+		}
 	}
 
-	return &Packet{
-		ID:   data[0],
-		Data: data[1:],
-	}, nil
+	var packetID VarInt
+	if _, err := packetID.ReadFrom(buffer); err != nil {
+		return fmt.Errorf("read packet id fail: %v", err)
+	}
+	p.ID = int32(packetID)
+	p.Data = buffer.Bytes()
+	return nil
 }
 
-// UnCompress 读取一个压缩的包
-func UnCompress(data []byte) (*Packet, error) {
-	reader := bytes.NewReader(data)
+// unCompress 读取一个压缩的包
+func unCompress(data *bytes.Buffer) error {
+	reader := bytes.NewReader(data.Bytes())
 
 	var sizeUncompressed VarInt
-	if err := sizeUncompressed.Decode(reader); err != nil {
-		return nil, err
+	if _, err := sizeUncompressed.ReadFrom(reader); err != nil {
+		return err
 	}
 
-	uncompressData := make([]byte, sizeUncompressed)
+	var uncompressedData []byte
 	if sizeUncompressed != 0 { // != 0 means compressed, let's decompress
+		uncompressedData = make([]byte, sizeUncompressed)
 		r, err := zlib.NewReader(reader)
-
 		if err != nil {
-			return nil, fmt.Errorf("decompress fail: %v", err)
+			return fmt.Errorf("decompress fail: %v", err)
 		}
-		_, err = io.ReadFull(r, uncompressData)
+		defer r.Close()
+		_, err = io.ReadFull(r, uncompressedData)
 		if err != nil {
-			return nil, fmt.Errorf("decompress fail: %v", err)
+			return fmt.Errorf("decompress fail: %v", err)
 		}
-		r.Close()
 	} else {
-		uncompressData = data[1:]
+		uncompressedData = data.Bytes()[1:]
 	}
-	return &Packet{
-		ID:   uncompressData[0],
-		Data: uncompressData[1:],
-	}, nil
+	*data = *bytes.NewBuffer(uncompressedData)
+	return nil
 }
 
-// Compress 压缩数据
-func Compress(data []byte) []byte {
+// compress 压缩数据
+func compress(data *bytes.Buffer) {
 	var b bytes.Buffer
 	w := zlib.NewWriter(&b)
-	w.Write(data)
-	w.Close()
-	return b.Bytes()
+	if _, err := data.WriteTo(w); err != nil {
+		panic(err)
+	}
+	if err := w.Close(); err != nil {
+		panic(err)
+	}
+	*data = b
+	return
 }

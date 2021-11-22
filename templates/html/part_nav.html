@@ -1,117 +1,58 @@
 <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-  <a class="navbar-brand" href="/">{{ .SiteName }}</a>
-  <button
-    class="navbar-toggler"
-    type="button"
-    data-toggle="collapse"
-    data-target="#navbarColor01"
-    aria-controls="navbarColor01"
-    aria-expanded="false"
-    aria-label="Toggle navigation"
-  >
+    <a class="navbar-brand" href="/">{{ .SiteName }}</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarColor01" aria-controls="navbarColor01" aria-expanded="false" aria-label="Toggle navigation">
     <span class="navbar-toggler-icon"></span>
   </button>
 
-  <div class="collapse navbar-collapse" id="navbarColor01">
-    <ul class="navbar-nav mr-auto">
-      <li class="nav-item">
-        <a class="nav-link" href="/">Home</a>
-      </li>
-      <li class="nav-item dropdown">
-        <a
-          class="nav-link dropdown-toggle"
-          href="/blog"
-          id="navbarDropdown"
-          role="button"
-          data-toggle="dropdown"
-          aria-haspopup="true"
-          aria-expanded="false"
-        >
-          Blog
-        </a>
-        <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-          <a class="dropdown-item" href="/blog">Recent</a>
-          <div class="dropdown-divider"></div>
-          <a class="dropdown-item" href="/blog/archive">Archive</a>
-          {{if .Authenticated }}
-          <div class="dropdown-divider"></div>
-          <a class="dropdown-item" href="/blog/compose">Compose</a>
-          {{end}}
-        </div>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link" href="/minecraft">Minecraft</a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link" href="https://music.sqweeb.net">Music</a>
-      </li>
-    </ul>
-    <form class="form-inline my-2 my-lg-0">
-      <script src="/static/js/auth.js"></script>
-      {{if .Authenticated }}
-      <span class="navbar-text" style="padding-right: 1rem;">
+    <div class="collapse navbar-collapse" id="navbarColor01">
+        <ul class="navbar-nav mr-auto">
+            <li class="nav-item">
+                <a class="nav-link" href="/">Home</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/minecraft">Minecraft</a>
+            </li>
+        </ul>
+        <form class="form-inline my-2 my-lg-0">
+            <script src="/static/js/auth.js"></script>
+            {{if .Authenticated }}
+            <span class="navbar-text" style="padding-right: 1rem;">
         <b>Welcome, {{ .Username }}</b>
       </span>
-      <button class="btn btn-danger my-2 my-sm-0" onclick="removeJWT()" id="logout" type="button">
+            <button class="btn btn-danger my-2 my-sm-0" onclick="removeJWT()" id="logout" type="button">
         Logout
-      </button>
-      {{else}}
-      <button
-        class="btn btn-success my-2 my-sm-0"
-        data-toggle="modal"
-        data-target="#loginModal"
-        id="login"
-        type="button"
-      >
+      </button> {{else}}
+            <button class="btn btn-success my-2 my-sm-0" data-toggle="modal" data-target="#loginModal" id="login" type="button">
         Login
-      </button>
-      {{end}}
-    </form>
-  </div>
+      </button> {{end}}
+        </form>
+    </div>
 </nav>
 
 <!-- Modal -->
-<div
-  class="modal fade"
-  id="loginModal"
-  tabindex="-1"
-  role="dialog"
-  aria-labelledby="loginModalLabel"
-  aria-hidden="true"
->
-  <div class="modal-dialog" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="loginModalLabel">Login</h5>
-        <button
-          type="button"
-          class="close"
-          data-dismiss="modal"
-          aria-label="Close"
-        >
+<div class="modal fade" id="loginModal" tabindex="-1" role="dialog" aria-labelledby="loginModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="loginModalLabel">Login</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
           <span aria-hidden="true">&times;</span>
         </button>
-      </div>
-      <div class="modal-body">
-        <form id="login-form" class="login-form" action="/auth/login" method="POST">
-          <input type="text" id="email" name="email" placeholder="Email Address"/><br />
-          <input type="password" id="password" name="password" placeholder="Password"/><br />
-        </form>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-dismiss="modal" onclick="location.reload()">
+            </div>
+            <div class="modal-body">
+                <form id="login-form" class="login-form" action="/auth/login" method="POST">
+                    <input type="text" id="email" name="email" placeholder="Email Address" /><br />
+                    <input type="password" id="password" name="password" placeholder="Password" /><br />
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal" onclick="location.reload()">
           Close
         </button>
-        <button
-          type="submit"
-          onclick="login()"
-          form="login-form"
-          class="btn btn-primary"
-          data-dismiss="modal"
-        >
+                <button type="submit" onclick="login()" form="login-form" class="btn btn-primary" data-dismiss="modal">
           Submit
         </button>
-      </div>
+            </div>
+        </div>
     </div>
-  </div>
 </div>

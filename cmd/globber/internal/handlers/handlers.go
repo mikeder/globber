@@ -5,9 +5,9 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/go-chi/chi"
-	"github.com/go-chi/chi/middleware"
-	"github.com/go-chi/jwtauth"
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
+	"github.com/go-chi/jwtauth/v5"
 	"github.com/mikeder/globber/internal/auth"
 	"github.com/mikeder/globber/internal/blog"
 	"github.com/mikeder/globber/internal/geoip"
@@ -36,6 +36,7 @@ func New(authMan *auth.Manager, bs *blog.Store, cfg *Config, mc *minecraft.Serve
 	router := chi.NewRouter()
 
 	// add global middleware
+	router.Use(middleware.Heartbeat("/ping"))
 	router.Use(middleware.RequestID)
 	router.Use(middleware.RealIP)
 	router.Use(middleware.Logger)
@@ -43,7 +44,7 @@ func New(authMan *auth.Manager, bs *blog.Store, cfg *Config, mc *minecraft.Serve
 	router.Use(middleware.Timeout(60 * time.Second))
 
 	// Seek, verify and validate JWT tokens for all requests
-	router.Use(jwtauth.Verifier(authMan.TokenAuth))
+	router.Use(jwtauth.Verifier(authMan.Auth))
 
 	// Public routes
 	router.Group(func(r chi.Router) {

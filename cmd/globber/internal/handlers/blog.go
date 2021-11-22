@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/go-chi/chi"
+	"github.com/go-chi/chi/v5"
 	"github.com/gosimple/slug"
 	"github.com/mikeder/globber/internal/auth"
 	"github.com/mikeder/globber/internal/blog"
@@ -189,6 +189,7 @@ func (s *site) root(w http.ResponseWriter, r *http.Request) {
 	validTkn, username := auth.ValidateCtx(r.Context())
 	id := s.geo.Lookup(r.RemoteAddr)
 	log.Printf("from: %s, in: %s\n", id.ParsedIP, id.CountryAlpha2)
+
 	sd := siteData{validTkn, s.config.SiteName, username, id.ParsedIP.String(), id.CountryAlpha2}
 
 	s.loadTemplates()

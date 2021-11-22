@@ -35,7 +35,7 @@ func (l *Locator) Lookup(ip string) GeoIpRecord {
 			}
 		}
 	}
-	return GeoIpRecord{CountryAlpha2: "EARF", ParsedIP: parsedIP}
+	return GeoIpRecord{CountryAlpha2: "A0", ParsedIP: parsedIP}
 }
 
 func (l *Locator) load() error {
