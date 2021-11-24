@@ -19,7 +19,8 @@ services:
       - db
     restart: on-failure
     build:
-      context: .    
+      context: .
+    entrypoint: ""
     command: "/bin/admin -migrate"
     environment:
       ADMIN_DBUSER: "root"
