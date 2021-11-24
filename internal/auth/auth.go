@@ -65,8 +65,8 @@ func ValidateCtx(ctx context.Context) (bool, string) {
 		return false, user
 	}
 
-	if name, ok := claims["name"]; ok {
-		user = name.(string)
+	if u, ok := claims["name"]; ok {
+		user = u.(string)
 	}
 
 	return true, user
@@ -114,9 +114,10 @@ func (m *Manager) AddUser(ctx context.Context, u *User) error {
 // DebugToken returns a token for debug purposes, it is valid for 1 hour.
 func (m *Manager) DebugToken() string {
 	claims := jwt.MapClaims{
-		"aud": "globber-debug",
-		"exp": time.Now().Add(time.Hour * 1).Unix(),
-		"sub": "superuser",
+		"aud":  "globber",
+		"exp":  time.Now().Add(time.Hour * 1).Unix(),
+		"sub":  "-1",
+		"name": "superuser",
 	}
 
 	token := jwt.NewWithClaims(signingMethod, claims)
