@@ -17,5 +17,5 @@ require (
 	github.com/mattn/go-sqlite3 v2.0.3+incompatible // indirect
 	github.com/pkg/errors v0.9.1
 	golang.org/x/crypto v0.17.0
-	golang.org/x/net v0.10.0
+	golang.org/x/net v0.17.0
 )
