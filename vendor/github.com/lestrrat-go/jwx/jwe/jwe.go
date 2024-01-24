@@ -47,7 +47,10 @@ func Encrypt(payload []byte, keyalg jwa.KeyEncryptionAlgorithm, key interface{},
 		return nil, errors.Wrap(err, `failed to create AES encrypter`)
 	}
 
+	var keyID string
 	if jwkKey, ok := key.(jwk.Key); ok {
+		keyID = jwkKey.KeyID()
+
 		var raw interface{}
 		if err := jwkKey.Raw(&raw); err != nil {
 			return nil, errors.Wrapf(err, `failed to retrieve raw key out of %T`, key)
@@ -137,6 +140,10 @@ func Encrypt(payload []byte, keyalg jwa.KeyEncryptionAlgorithm, key interface{},
 		enc, _ = keyenc.NewNoop(keyalg, sharedkey)
 	default:
 		return nil, errors.Errorf(`invalid key encryption algorithm (%s)`, keyalg)
+	}
+
+	if keyID != "" {
+		enc.SetKeyID(keyID)
 	}
 
 	keysize := contentcrypt.KeySize()
@@ -358,13 +365,13 @@ func parseCompact(buf []byte, storeProtectedHeaders bool) (*Message, error) {
 //
 // In that case you would register a custom field as follows
 //
-//   jwe.RegisterCustomField(`x-birthday`, timeT)
+//	jwe.RegisterCustomField(`x-birthday`, timeT)
 //
 // Then `hdr.Get("x-birthday")` will still return an `interface{}`,
 // but you can convert its type to `time.Time`
 //
-//   bdayif, _ := hdr.Get(`x-birthday`)
-//   bday := bdayif.(time.Time)
+//	bdayif, _ := hdr.Get(`x-birthday`)
+//	bday := bdayif.(time.Time)
 func RegisterCustomField(name string, object interface{}) {
 	registry.Register(name, object)
 }

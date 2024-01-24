@@ -2,8 +2,10 @@ package jwt
 
 import (
 	"context"
+	"net/http"
 	"time"
 
+	"github.com/lestrrat-go/backoff/v2"
 	"github.com/lestrrat-go/jwx/jwa"
 	"github.com/lestrrat-go/jwx/jwe"
 	"github.com/lestrrat-go/jwx/jwk"
@@ -125,6 +127,11 @@ type identToken struct{}
 type identTypedClaim struct{}
 type identValidate struct{}
 type identVerify struct{}
+type identVerifyAuto struct{}
+type identFetchBackoff struct{}
+type identFetchWhitelist struct{}
+type identHTTPClient struct{}
+type identJWKSetFetcher struct{}
 
 type identHeaderKey struct{}
 type identFormKey struct{}
@@ -266,7 +273,7 @@ func WithAudience(s string) ValidateOption {
 	return WithValidator(ClaimContainsString(AudienceKey, s))
 }
 
-// WithClaimValue specifies that expected any claim value.
+// WithClaimValue specifies the expected value for a given claim
 func WithClaimValue(name string, v interface{}) ValidateOption {
 	return WithValidator(ClaimValueIs(name, v))
 }
@@ -300,7 +307,7 @@ func WithFlattenAudience(v bool) GlobalOption {
 	return &globalOption{option.New(identFlattenAudience{}, v)}
 }
 
-type typedClaimPair struct {
+type claimPair struct {
 	Name  string
 	Value interface{}
 }
@@ -329,7 +336,7 @@ type typedClaimPair struct {
 // `openid.New()` will respect this option, if you provide your own custom
 // token type, it will need to implement the TokenWithDecodeCtx interface.
 func WithTypedClaim(name string, object interface{}) ParseOption {
-	return newParseOption(identTypedClaim{}, typedClaimPair{Name: name, Value: object})
+	return newParseOption(identTypedClaim{}, claimPair{Name: name, Value: object})
 }
 
 // WithRequiredClaim specifies that the claim identified the given name
@@ -355,7 +362,7 @@ func WithRequiredClaim(name string) ValidateOption {
 //
 // For example, in order to specify that `exp` - `iat` should be less than 10*time.Second, you would write
 //
-//    jwt.Validate(token, jwt.WithMaxDelta(10*time.Second, jwt.ExpirationKey, jwt.IssuedAtKey))
+//	jwt.Validate(token, jwt.WithMaxDelta(10*time.Second, jwt.ExpirationKey, jwt.IssuedAtKey))
 //
 // If AcceptableSkew of 2 second is specified, the above will return valid for any value of
 // `exp` - `iat`  between 8 (10-2) and 12 (10+2).
@@ -368,10 +375,9 @@ func WithMaxDelta(dur time.Duration, c1, c2 string) ValidateOption {
 //
 // For example, in order to specify that `exp` - `iat` should be greater than 10*time.Second, you would write
 //
-//    jwt.Validate(token, jwt.WithMinDelta(10*time.Second, jwt.ExpirationKey, jwt.IssuedAtKey))
+//	jwt.Validate(token, jwt.WithMinDelta(10*time.Second, jwt.ExpirationKey, jwt.IssuedAtKey))
 //
 // The validation would fail if the difference is less than 10 seconds.
-//
 func WithMinDelta(dur time.Duration, c1, c2 string) ValidateOption {
 	return WithValidator(MinDeltaIs(c1, c2, dur))
 }
@@ -380,14 +386,13 @@ func WithMinDelta(dur time.Duration, c1, c2 string) ValidateOption {
 //
 // For example, in order to validate tokens that are only valid during August, you would write
 //
-//    validator := jwt.ValidatorFunc(func(_ context.Context, t jwt.Token) error {
-//      if time.Now().Month() != 8 {
-//        return fmt.Errorf(`tokens are only valid during August!`)
-//      }
-//      return nil
-//    })
-//   err := jwt.Validate(token, jwt.WithValidator(validator))
-//
+//	 validator := jwt.ValidatorFunc(func(_ context.Context, t jwt.Token) error {
+//	   if time.Now().Month() != 8 {
+//	     return fmt.Errorf(`tokens are only valid during August!`)
+//	   }
+//	   return nil
+//	 })
+//	err := jwt.Validate(token, jwt.WithValidator(validator))
 func WithValidator(v Validator) ValidateOption {
 	return newValidateOption(identValidator{}, v)
 }
@@ -477,4 +482,55 @@ func WithKeySetProvider(p KeySetProvider) ParseOption {
 // `context.Context` object.
 func WithContext(ctx context.Context) ValidateOption {
 	return newValidateOption(identContext{}, ctx)
+}
+
+// WithVerifyAuto specifies that the JWS verification should be performed
+// using `jws.VerifyAuto()`, which in turn attempts to verify the message
+// using values that are stored within the JWS message.
+//
+// Only passing this option to `jwt.Parse()` will not result in a successful
+// verification. Please make sure to carefully read the documentation in
+// `jws.VerifyAuto()`, and provide the necessary Whitelist object via
+// `jwt.WithFetchWhitelist()`
+//
+// You might also consider using a backoff policy by using `jwt.WithFetchBackoff()`
+// to control the number of requests being made.
+func WithVerifyAuto(v bool) ParseOption {
+	return newParseOption(identVerifyAuto{}, v)
+}
+
+// WithFetchWhitelist specifies the `jwk.Whitelist` object that should be
+// passed to `jws.VerifyAuto()`, which in turn will be passed to `jwk.Fetch()`
+//
+// This is a wrapper over `jws.WithFetchWhitelist()` that can be passed
+// to `jwt.Parse()`, and will be ignored if you spcify `jws.WithJWKSetFetcher()`
+func WithFetchWhitelist(wl jwk.Whitelist) ParseOption {
+	return newParseOption(identFetchWhitelist{}, wl)
+}
+
+// WithHTTPClient specifies the `*http.Client` object that should be
+// passed to `jws.VerifyAuto()`, which in turn will be passed to `jwk.Fetch()`
+//
+// This is a wrapper over `jws.WithHTTPClient()` that can be passed
+// to `jwt.Parse()`, and will be ignored if you spcify `jws.WithJWKSetFetcher()`
+func WithHTTPClient(httpcl *http.Client) ParseOption {
+	return newParseOption(identHTTPClient{}, httpcl)
+}
+
+// WithFetchBackoff specifies the `backoff.Policy` object that should be
+// passed to `jws.VerifyAuto()`, which in turn will be passed to `jwk.Fetch()`
+//
+// This is a wrapper over `jws.WithFetchBackoff()` that can be passed
+// to `jwt.Parse()`, and will be ignored if you spcify `jws.WithJWKSetFetcher()`
+func WithFetchBackoff(b backoff.Policy) ParseOption {
+	return newParseOption(identFetchBackoff{}, b)
+}
+
+// WithJWKSetFetcher specifies the `jws.JWKSetFetcher` object that should be
+// passed to `jws.VerifyAuto()`
+//
+// This is a wrapper over `jws.WithJWKSetFetcher()` that can be passed
+// to `jwt.Parse()`.
+func WithJWKSetFetcher(f jws.JWKSetFetcher) ParseOption {
+	return newParseOption(identJWKSetFetcher{}, f)
 }

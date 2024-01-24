@@ -395,8 +395,10 @@ func (m *Message) UnmarshalJSON(buf []byte) error {
 		m.rawProtectedHeaders = base64.Encode(protectedHeadersRaw)
 	}
 
-	if !proxy.UnprotectedHeaders.(isZeroer).isZero() {
-		m.unprotectedHeaders = proxy.UnprotectedHeaders
+	if iz, ok := proxy.UnprotectedHeaders.(isZeroer); ok {
+		if !iz.isZero() {
+			m.unprotectedHeaders = proxy.UnprotectedHeaders
+		}
 	}
 
 	if len(m.recipients) == 0 {
@@ -609,6 +611,11 @@ func doDecryptCtx(dctx *decryptCtx) ([]byte, error) {
 			countFlt, ok := count.(float64)
 			if !ok {
 				return nil, errors.Errorf("unexpected type for 'p2c': %T", count)
+			}
+			// in v1, this number is hardcoded to 10000. Use v2 if you need to
+			// finetune this value
+			if countFlt > 10000 {
+				return nil, errors.Errorf("invalid value for 'p2c'")
 			}
 			salt, err := base64.DecodeString(saltB64Str)
 			if err != nil {

@@ -12,7 +12,7 @@ require (
 	github.com/gosimple/slug v1.11.2
 	github.com/jmoiron/sqlx v1.3.4
 	github.com/kelseyhightower/envconfig v1.4.0
-	github.com/lestrrat-go/jwx v1.2.11 // indirect
+	github.com/lestrrat-go/jwx v1.2.28 // indirect
 	github.com/lib/pq v1.10.4 // indirect
 	github.com/mattn/go-sqlite3 v2.0.3+incompatible // indirect
 	github.com/pkg/errors v0.9.1
