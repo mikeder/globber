@@ -69,10 +69,12 @@ func (h *stdHeaders) Clone(ctx context.Context) (Headers, error) {
 	return dst, nil
 }
 
-func (h *stdHeaders) Copy(ctx context.Context, dst Headers) error {
+func (h *stdHeaders) Copy(_ context.Context, dst Headers) error {
 	for _, pair := range h.makePairs() {
-		if err := dst.Set(pair.Key.(string), pair.Value); err != nil {
-			return errors.Wrapf(err, `failed to set header`)
+		//nolint:forcetypeassert
+		key := pair.Key.(string)
+		if err := dst.Set(key, pair.Value); err != nil {
+			return errors.Wrapf(err, `failed to set header %q`, key)
 		}
 	}
 	return nil
