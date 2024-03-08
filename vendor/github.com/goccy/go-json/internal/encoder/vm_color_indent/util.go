@@ -181,8 +181,15 @@ func appendComma(_ *encoder.RuntimeContext, b []byte) []byte {
 	return append(b, ',', '\n')
 }
 
+func appendNullComma(ctx *encoder.RuntimeContext, b []byte) []byte {
+	format := ctx.Option.ColorScheme.Null
+	b = append(b, format.Header...)
+	b = append(b, "null"...)
+	return append(append(b, format.Footer...), ',', '\n')
+}
+
 func appendColon(_ *encoder.RuntimeContext, b []byte) []byte {
-	return append(b, ':', ' ')
+	return append(b[:len(b)-2], ':', ' ')
 }
 
 func appendMapKeyValue(ctx *encoder.RuntimeContext, code *encoder.Opcode, b, key, value []byte) []byte {
@@ -222,8 +229,9 @@ func appendEmptyObject(_ *encoder.RuntimeContext, b []byte) []byte {
 
 func appendObjectEnd(ctx *encoder.RuntimeContext, code *encoder.Opcode, b []byte) []byte {
 	last := len(b) - 1
-	b[last] = '\n'
-	b = appendIndent(ctx, b, code.Indent-1)
+	// replace comma to newline
+	b[last-1] = '\n'
+	b = appendIndent(ctx, b[:last], code.Indent)
 	return append(b, '}', ',', '\n')
 }
 

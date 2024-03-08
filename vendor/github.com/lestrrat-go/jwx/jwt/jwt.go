@@ -7,9 +7,11 @@ import (
 	"bytes"
 	"io"
 	"io/ioutil"
+	"net/http"
 	"strings"
 	"sync/atomic"
 
+	"github.com/lestrrat-go/backoff/v2"
 	"github.com/lestrrat-go/jwx"
 	"github.com/lestrrat-go/jwx/internal/json"
 	"github.com/lestrrat-go/jwx/jwe"
@@ -63,6 +65,12 @@ func ParseString(s string, options ...ParseOption) (Token, error) {
 // you must pass the jwt.WithVerify(alg, key) or jwt.WithKeySet(jwk.Set) option.
 // If you do not specify these parameters, no verification will be performed.
 //
+// During verification, if the JWS headers specify a key ID (`kid`), the
+// key used for verification must match the specified ID. If you are somehow
+// using a key without a `kid` (which is highly unlikely if you are working
+// with a JWT from a well know provider), you can workaround this by modifying
+// the `jwk.Key` and setting the `kid` header.
+//
 // If you also want to assert the validity of the JWT itself (i.e. expiration
 // and such), use the `Validate()` function on the returned token, or pass the
 // `WithValidate(true)` option. Validate options can also be passed to
@@ -92,12 +100,14 @@ type parseCtx struct {
 	keySetProvider   KeySetProvider
 	token            Token
 	validateOpts     []ValidateOption
+	verifyAutoOpts   []jws.VerifyOption
 	localReg         *json.Registry
 	inferAlgorithm   bool
 	pedantic         bool
 	skipVerification bool
 	useDefault       bool
 	validate         bool
+	verifyAuto       bool
 }
 
 func parseBytes(data []byte, options ...ParseOption) (Token, error) {
@@ -110,6 +120,16 @@ func parseBytes(data []byte, options ...ParseOption) (Token, error) {
 
 		//nolint:forcetypeassert
 		switch o.Ident() {
+		case identVerifyAuto{}:
+			ctx.verifyAuto = o.Value().(bool)
+		case identFetchWhitelist{}:
+			ctx.verifyAutoOpts = append(ctx.verifyAutoOpts, jws.WithFetchWhitelist(o.Value().(jwk.Whitelist)))
+		case identHTTPClient{}:
+			ctx.verifyAutoOpts = append(ctx.verifyAutoOpts, jws.WithHTTPClient(o.Value().(*http.Client)))
+		case identFetchBackoff{}:
+			ctx.verifyAutoOpts = append(ctx.verifyAutoOpts, jws.WithFetchBackoff(o.Value().(backoff.Policy)))
+		case identJWKSetFetcher{}:
+			ctx.verifyAutoOpts = append(ctx.verifyAutoOpts, jws.WithJWKSetFetcher(o.Value().(jws.JWKSetFetcher)))
 		case identVerify{}:
 			ctx.verifyParams = o.Value().(VerifyParameters)
 		case identDecrypt{}:
@@ -133,7 +153,7 @@ func parseBytes(data []byte, options ...ParseOption) (Token, error) {
 		case identValidate{}:
 			ctx.validate = o.Value().(bool)
 		case identTypedClaim{}:
-			pair := o.Value().(typedClaimPair)
+			pair := o.Value().(claimPair)
 			if ctx.localReg == nil {
 				ctx.localReg = json.NewRegistry()
 			}
@@ -157,6 +177,12 @@ const (
 )
 
 func verifyJWS(ctx *parseCtx, payload []byte) ([]byte, int, error) {
+	if ctx.verifyAuto {
+		options := ctx.verifyAutoOpts
+		verified, err := jws.VerifyAuto(payload, options...)
+		return verified, _JwsVerifyDone, err
+	}
+
 	// if we have a key set or a provider, use that
 	ks := ctx.keySet
 	p := ctx.keySetProvider
@@ -238,34 +264,27 @@ func verifyJWSWithKeySet(ctx *parseCtx, payload []byte) ([]byte, int, error) {
 			return nil, _JwsVerifyInvalid, errors.Wrapf(err, `invalid signature algorithm %s`, key.Algorithm())
 		}
 
-		// Okay, we have a valid algorithm, go go
+		// Okay, we have a valid algorithm
 		return verifyJWSWithParams(ctx, payload, alg, key)
 	}
 
 	if ctx.inferAlgorithm {
-		// Okay, we couldn't deterministically find the single key to use.
-		// fallback to heuristics.
-		for i := 0; i < ks.Len(); i++ {
-			key, _ := ks.Get(i)
-			algs, err := jws.AlgorithmsForKey(key)
-			if err != nil {
-				return nil, _JwsVerifyInvalid, errors.Wrapf(err, `failed to get a list of signature methods for key type %s`, key.KeyType())
-			}
+		// Check whether the JWT headers specify a valid
+		// algorithm, use it if it's compatible.
+		algs, err := jws.AlgorithmsForKey(key)
+		if err != nil {
+			return nil, _JwsVerifyInvalid, errors.Wrapf(err, `failed to get a list of signature methods for key type %s`, key.KeyType())
+		}
 
-			for _, alg := range algs {
-				// bail out if the JWT has a `alg` field, and it doesn't match
-				if tokAlg := headers.Algorithm(); tokAlg != "" {
-					if tokAlg != alg {
-						continue
-					}
-				}
-
-				// Yippeeeeeee! we found a key that matches both kid and alg!
-				v, state, err := verifyJWSWithParams(ctx, payload, alg, key)
-				if err == nil {
-					return v, state, nil
+		for _, alg := range algs {
+			// bail out if the JWT has a `alg` field, and it doesn't match
+			if tokAlg := headers.Algorithm(); tokAlg != "" {
+				if tokAlg != alg {
+					continue
 				}
 			}
+
+			return verifyJWSWithParams(ctx, payload, alg, key)
 		}
 	}
 
@@ -510,8 +529,10 @@ func (t *stdToken) Clone() (Token, error) {
 	dst := New()
 
 	for _, pair := range t.makePairs() {
-		if err := dst.Set(pair.Key.(string), pair.Value); err != nil {
-			return nil, errors.Wrapf(err, `failed to set %s`, pair.Key.(string))
+		//nolint:forcetypeassert
+		key := pair.Key.(string)
+		if err := dst.Set(key, pair.Value); err != nil {
+			return nil, errors.Wrapf(err, `failed to set %s`, key)
 		}
 	}
 	return dst, nil
@@ -527,14 +548,13 @@ func (t *stdToken) Clone() (Token, error) {
 //
 // In that case you would register a custom field as follows
 //
-//   jwt.RegisterCustomField(`x-birthday`, timeT)
+//	jwt.RegisterCustomField(`x-birthday`, timeT)
 //
 // Then `token.Get("x-birthday")` will still return an `interface{}`,
 // but you can convert its type to `time.Time`
 //
-//   bdayif, _ := token.Get(`x-birthday`)
-//   bday := bdayif.(time.Time)
-//
+//	bdayif, _ := token.Get(`x-birthday`)
+//	bday := bdayif.(time.Time)
 func RegisterCustomField(name string, object interface{}) {
 	registry.Register(name, object)
 }

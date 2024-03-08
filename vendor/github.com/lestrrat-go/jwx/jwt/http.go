@@ -50,19 +50,20 @@ func ParseForm(values url.Values, name string, options ...ParseOption) (Token, e
 //
 // If WithHeaderKey() is used, you must explicitly re-enable searching for "Authorization" header.
 //
-//   # searches for "Authorization"
-//   jwt.ParseRequest(req)
+//	# searches for "Authorization"
+//	jwt.ParseRequest(req)
 //
-//   # searches for "x-my-token" ONLY.
-//   jwt.ParseRequest(req, http.WithHeaderKey("x-my-token"))
+//	# searches for "x-my-token" ONLY.
+//	jwt.ParseRequest(req, jwt.WithHeaderKey("x-my-token"))
 //
-//   # searches for "Authorization" AND "x-my-token"
-//   jwt.ParseRequest(req, http.WithHeaderKey("Authorization"), http.WithHeaderKey("x-my-token"))
+//	# searches for "Authorization" AND "x-my-token"
+//	jwt.ParseRequest(req, jwt.WithHeaderKey("Authorization"), jwt.WithHeaderKey("x-my-token"))
 func ParseRequest(req *http.Request, options ...ParseOption) (Token, error) {
 	var hdrkeys []string
 	var formkeys []string
 	var parseOptions []ParseOption
 	for _, option := range options {
+		//nolint:forcetypeassert
 		switch option.Ident() {
 		case identHeaderKey{}:
 			hdrkeys = append(hdrkeys, option.Value().(string))
